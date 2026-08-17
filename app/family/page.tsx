@@ -1,6 +1,8 @@
 import { eq, desc, asc } from "drizzle-orm";
 import Link from "next/link";
 import Image from "next/image";
+
+export const dynamic = "force-dynamic";
 import { CheckCircle2, Clock, Radio } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { medications, medEvents, callSessions, familyMembers } from "@/lib/db/schema";

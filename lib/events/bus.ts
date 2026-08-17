@@ -1,34 +1,28 @@
-import { EventEmitter } from "events";
-import type { Turn } from "@/lib/audio/session";
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import { relayState } from "@/lib/db/schema";
 
 /**
- * In-process pub/sub for the relay SSE stream. One demo machine, one process —
- * module-level state is the whole "backend" here, deliberately (§1.5).
+ * Turn state lives in the DB, not in process memory. On Vercel, send/receive/stream
+ * can each land on a different serverless instance with no shared memory — the DB
+ * (Neon, centrally hosted) is the only thing all of them actually share. Locally
+ * this is just a tiny SQLite table; same code path either way.
  */
-const emitter = new EventEmitter();
-emitter.setMaxListeners(0);
+export type Turn = "family" | "popo" | "idle";
 
-export type RelayEvent =
-  | { type: "message"; messageId: string }
-  | { type: "played"; messageId: string }
-  | { type: "turn"; whoseTurn: Turn };
+const ELDER_ID = "popo";
 
-let whoseTurn: Turn = "family";
-
-export function getTurn(): Turn {
-  return whoseTurn;
+export async function getTurn(): Promise<Turn> {
+  const [row] = await db.select().from(relayState).where(eq(relayState.elderId, ELDER_ID));
+  return (row?.whoseTurn as Turn) ?? "family";
 }
 
-export function setTurn(turn: Turn) {
-  whoseTurn = turn;
-  emitter.emit("event", { type: "turn", whoseTurn: turn } satisfies RelayEvent);
-}
-
-export function publish(event: RelayEvent) {
-  emitter.emit("event", event);
-}
-
-export function subscribe(onEvent: (event: RelayEvent) => void): () => void {
-  emitter.on("event", onEvent);
-  return () => emitter.off("event", onEvent);
+export async function setTurn(turn: Turn): Promise<void> {
+  await db
+    .insert(relayState)
+    .values({ elderId: ELDER_ID, whoseTurn: turn })
+    .onConflictDoUpdate({
+      target: relayState.elderId,
+      set: { whoseTurn: turn, updatedAt: new Date() },
+    });
 }

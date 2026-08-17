@@ -1,6 +1,8 @@
 import { desc, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { newsItems } from "@/lib/db/schema";
+
+export const dynamic = "force-dynamic";
 import { NewsQueue } from "@/components/family/NewsQueue";
 
 export default async function FamilyNewsPage() {

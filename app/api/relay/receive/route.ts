@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { relayMessages } from "@/lib/db/schema";
 import { translate } from "@/lib/llm/translate";
-import { publish, setTurn } from "@/lib/events/bus";
+import { setTurn } from "@/lib/events/bus";
 
 const ELDER_ID = "popo";
 
@@ -18,8 +18,7 @@ export async function POST(req: Request) {
     .values({ elderId: ELDER_ID, senderNameEn: "Popo", textEn, textZh })
     .returning();
 
-  publish({ type: "message", messageId: row.id });
-  setTurn("family");
+  await setTurn("family");
 
   return NextResponse.json(row);
 }

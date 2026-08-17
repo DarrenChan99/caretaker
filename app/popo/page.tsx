@@ -1,6 +1,8 @@
 import { eq } from "drizzle-orm";
 import { Users, Newspaper, Phone } from "lucide-react";
 import { db } from "@/lib/db/client";
+
+export const dynamic = "force-dynamic";
 import { elders } from "@/lib/db/schema";
 import { zhHK } from "@/lib/i18n/zh-HK";
 import { PopoNotificationCard } from "@/components/popo/PopoNotificationCard";

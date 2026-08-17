@@ -1,104 +1,24 @@
-import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
-import { sql } from "drizzle-orm";
+// Re-exports whichever dialect's table objects are actually live, not just
+// Postgres's. Column *shapes* match between schema.pg.ts and schema.sqlite.ts, but
+// defaults (e.g. `now()` vs `unixepoch()`) are dialect-specific SQL baked into the
+// table object — importing the wrong one breaks inserts against the other driver.
+//
+// Typed as the Postgres shape always (matching lib/db/client.ts's `db` type) so
+// call sites get one consistent type instead of a PgTable | SQLiteTable union that
+// breaks drizzle's generic inference. Safe because client.ts picks its driver from
+// the same usePg flag, so the runtime object always matches the driver in use.
+import * as pg from "./schema.pg";
+import * as sqlite from "./schema.sqlite";
+import { usePg } from "./dialect";
 
-// Column types (text/integer) are chosen to be a mechanical Postgres port later:
-// text -> text/uuid, integer timestamp -> timestamptz, integer boolean -> boolean.
-const id = (name = "id") =>
-  text(name)
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID());
+const active = (usePg ? pg : sqlite) as unknown as typeof pg;
 
-const createdAt = (name = "created_at") =>
-  integer(name, { mode: "timestamp" })
-    .notNull()
-    .default(sql`(unixepoch())`);
-
-export const elders = sqliteTable("elders", {
-  id: id(),
-  nameEn: text("name_en").notNull(),
-  nameZh: text("name_zh").notNull(),
-  preferredNameZh: text("preferred_name_zh").notNull(),
-  facilityName: text("facility_name").notNull(),
-  locale: text("locale").notNull().default("zh-HK"),
-});
-
-export const familyMembers = sqliteTable("family_members", {
-  id: id(),
-  elderId: text("elder_id")
-    .notNull()
-    .references(() => elders.id),
-  nameEn: text("name_en").notNull(),
-  nameZh: text("name_zh").notNull(),
-  relationshipEn: text("relationship_en").notNull(),
-  relationshipZh: text("relationship_zh").notNull(),
-  photoPath: text("photo_path").notNull(),
-  introZh: text("intro_zh").notNull(),
-  voiceNotePath: text("voice_note_path"),
-  treeParentId: text("tree_parent_id"),
-  treeOrder: integer("tree_order").notNull().default(0),
-});
-
-export const memories = sqliteTable("memories", {
-  id: id(),
-  familyMemberId: text("family_member_id")
-    .notNull()
-    .references(() => familyMembers.id),
-  titleZh: text("title_zh").notNull(),
-  bodyZh: text("body_zh").notNull(),
-  year: integer("year"),
-  photoPath: text("photo_path"),
-});
-
-export const medications = sqliteTable("medications", {
-  id: id(),
-  elderId: text("elder_id")
-    .notNull()
-    .references(() => elders.id),
-  nameZh: text("name_zh").notNull(),
-  doseZh: text("dose_zh").notNull(),
-  scheduledTime: text("scheduled_time").notNull(),
-  active: integer("active", { mode: "boolean" }).notNull().default(true),
-});
-
-export const medEvents = sqliteTable("med_events", {
-  id: id(),
-  medicationId: text("medication_id")
-    .notNull()
-    .references(() => medications.id),
-  occurredAt: createdAt("occurred_at"),
-  confirmed: integer("confirmed", { mode: "boolean" }).notNull().default(false),
-  source: text("source", { enum: ["call", "family"] }).notNull(),
-});
-
-export const newsItems = sqliteTable("news_items", {
-  id: id(),
-  source: text("source").notNull(),
-  headlineZh: text("headline_zh").notNull(),
-  passageZh: text("passage_zh").notNull(),
-  url: text("url").notNull(),
-  fetchedAt: createdAt("fetched_at"),
-  approved: integer("approved", { mode: "boolean" }).notNull().default(false),
-  reviewedAt: integer("reviewed_at", { mode: "timestamp" }), // null = pending review
-});
-
-export const callSessions = sqliteTable("call_sessions", {
-  id: id(),
-  elderId: text("elder_id")
-    .notNull()
-    .references(() => elders.id),
-  startedAt: createdAt("started_at"),
-  endedAt: integer("ended_at", { mode: "timestamp" }),
-  transcriptJson: text("transcript_json"),
-});
-
-export const relayMessages = sqliteTable("relay_messages", {
-  id: id(),
-  elderId: text("elder_id")
-    .notNull()
-    .references(() => elders.id),
-  senderNameEn: text("sender_name_en").notNull(),
-  textEn: text("text_en").notNull(),
-  textZh: text("text_zh").notNull(),
-  createdAt: createdAt("created_at"),
-  playedAt: integer("played_at", { mode: "timestamp" }),
-});
+export const elders = active.elders;
+export const familyMembers = active.familyMembers;
+export const memories = active.memories;
+export const medications = active.medications;
+export const medEvents = active.medEvents;
+export const newsItems = active.newsItems;
+export const callSessions = active.callSessions;
+export const relayMessages = active.relayMessages;
+export const relayState = active.relayState;

@@ -7,7 +7,7 @@ import { useRelayStream, type RelayMessage } from "@/lib/relay/useRelayStream";
 import { useRelayMode } from "@/lib/relay/useRelayMode";
 
 export default function FamilyRelayPage() {
-  const { whoseTurn, status, lastMessageId } = useRelayStream();
+  const { whoseTurn, status, revision } = useRelayStream();
   const { mode, setMode } = useRelayMode();
   const [messages, setMessages] = useState<RelayMessage[]>([]);
   const [listening, setListening] = useState(false);
@@ -24,8 +24,8 @@ export default function FamilyRelayPage() {
 
   useEffect(refresh, []);
   useEffect(() => {
-    if (lastMessageId) refresh();
-  }, [lastMessageId]);
+    if (revision > 0) refresh();
+  }, [revision]);
 
   async function send(textEn: string) {
     if (!textEn.trim()) return;

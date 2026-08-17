@@ -1,6 +1,8 @@
 import { eq, asc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { familyMembers } from "@/lib/db/schema";
+
+export const dynamic = "force-dynamic";
 import { FaceCards } from "@/components/popo/FaceCards";
 
 export default async function PopoPeoplePage() {

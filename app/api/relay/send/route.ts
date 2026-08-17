@@ -3,7 +3,7 @@ import { db } from "@/lib/db/client";
 import { relayMessages } from "@/lib/db/schema";
 import { translate } from "@/lib/llm/translate";
 import { deliver, type DeliveryMode } from "@/lib/relay/deliver";
-import { publish, setTurn } from "@/lib/events/bus";
+import { setTurn } from "@/lib/events/bus";
 
 const ELDER_ID = "popo";
 
@@ -20,8 +20,7 @@ export async function POST(req: Request) {
     .values({ elderId: ELDER_ID, senderNameEn: "Ken", textEn, textZh })
     .returning();
 
-  publish({ type: "message", messageId: row.id });
-  setTurn("popo");
+  await setTurn("popo");
 
   const delivery = await deliver(textZh, mode);
 

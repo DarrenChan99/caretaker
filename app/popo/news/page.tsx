@@ -1,6 +1,8 @@
 import { eq, desc, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { newsItems } from "@/lib/db/schema";
+
+export const dynamic = "force-dynamic";
 import { NewsReader } from "@/components/popo/NewsReader";
 import { zhHK } from "@/lib/i18n/zh-HK";
 import Link from "next/link";

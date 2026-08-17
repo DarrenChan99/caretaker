@@ -8,11 +8,14 @@
     "start": "next start",
     "lint": "eslint",
     "db:push": "drizzle-kit push",
+    "db:push:pg": "dotenv -e .env.neon.local -- drizzle-kit push --config=drizzle.config.pg.ts",
     "seed": "tsx scripts/seed.ts",
+    "seed:pg": "dotenv -e .env.neon.local -- tsx scripts/seed.ts",
     "seed:photos": "tsx scripts/seed-from-photos.ts",
     "cache:prewarm": "tsx scripts/prewarm-cache.ts"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.1.0",
     "@vapi-ai/web": "^2.6.2",
     "apify-client": "^2.25.0",
     "better-sqlite3": "^13.0.3",
@@ -30,6 +33,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "dotenv-cli": "^11.0.0",
     "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.3.1",

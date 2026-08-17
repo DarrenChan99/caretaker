@@ -15,12 +15,15 @@ export interface RelayMessage {
 
 export type ConnectionStatus = "connected" | "reconnecting";
 
-/** Subscribes to /api/relay/stream with backoff reconnect. Never surfaces an error code. */
+/**
+ * Subscribes to /api/relay/stream (DB-polled server-side, not in-process pub/sub —
+ * see the route for why). `revision` bumps on any change (turn, new message, played
+ * status) so consumers can just refetch on change instead of tracking event shapes.
+ */
 export function useRelayStream() {
   const [whoseTurn, setWhoseTurn] = useState<Turn>("family");
   const [status, setStatus] = useState<ConnectionStatus>("reconnecting");
-  const [lastMessageId, setLastMessageId] = useState<string | null>(null);
-  const [lastPlayedId, setLastPlayedId] = useState<string | null>(null);
+  const [revision, setRevision] = useState(0);
   const retryDelay = useRef(1000);
 
   useEffect(() => {
@@ -38,9 +41,8 @@ export function useRelayStream() {
 
       es.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        if (data.type === "hello" || data.type === "turn") setWhoseTurn(data.whoseTurn);
-        if (data.type === "message") setLastMessageId(data.messageId);
-        if (data.type === "played") setLastPlayedId(data.messageId);
+        if (data.whoseTurn) setWhoseTurn(data.whoseTurn);
+        if (data.type === "update") setRevision((r) => r + 1);
       };
 
       es.onerror = () => {
@@ -60,5 +62,5 @@ export function useRelayStream() {
     };
   }, []);
 
-  return { whoseTurn, status, lastMessageId, lastPlayedId };
+  return { whoseTurn, status, revision };
 }

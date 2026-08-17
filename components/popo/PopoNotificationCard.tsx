@@ -16,7 +16,7 @@ interface LatestMessage {
  * what unlocks playback audio for that call.
  */
 export function PopoNotificationCard() {
-  const { lastMessageId } = useRelayStream();
+  const { revision } = useRelayStream();
   const [unplayed, setUnplayed] = useState(false);
 
   function check() {
@@ -27,8 +27,8 @@ export function PopoNotificationCard() {
 
   useEffect(check, []);
   useEffect(() => {
-    if (lastMessageId) check();
-  }, [lastMessageId]);
+    if (revision > 0) check();
+  }, [revision]);
 
   if (!unplayed) return null;
 

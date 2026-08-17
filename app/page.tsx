@@ -1,7 +1,8 @@
 import Link from "next/link";
 
-// Dev convenience only — judges open /popo and /family directly, tiled side by side.
-// No nav crosses between the two views inside the app (§1).
+// For the real demo, open /popo and /family in two tiled windows directly — no nav
+// crosses between the two views inside the app (§1). This page (and /demo) are just
+// convenient jump-off points, useful for sharing one Vercel link.
 export default function RootPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[var(--cream)]">
@@ -12,10 +13,16 @@ export default function RootPage() {
         <Link href="/popo" className="rounded-[8px] bg-[var(--sage)] px-4 py-2 text-white">
           Open /popo
         </Link>
-        <Link href="/family" className="rounded-[8px] border border-[var(--sage)] px-4 py-2 text-[var(--sage-deep)]">
+        <Link
+          href="/family"
+          className="rounded-[8px] border border-[var(--sage)] px-4 py-2 text-[var(--sage-deep)]"
+        >
           Open /family
         </Link>
       </div>
+      <Link href="/demo" className="text-[13px] text-[var(--ink-soft)] underline">
+        Or open both side by side →
+      </Link>
     </div>
   );
 }
