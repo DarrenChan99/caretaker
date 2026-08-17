@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:push": "drizzle-kit push",
+    "seed": "tsx scripts/seed.ts",
+    "seed:photos": "tsx scripts/seed-from-photos.ts",
+    "cache:prewarm": "tsx scripts/prewarm-cache.ts"
   },
   "dependencies": {
     "@vapi-ai/web": "^2.6.2",

@@ -1,26 +1,85 @@
 @import "tailwindcss";
 
+/* ---- Palette (§5.1) ---- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --cream: #f5f1ea;
+  --paper: #ffffff;
+  --ink: #23342a;
+  --ink-soft: #5a6b60;
+  --sage: #4f7d5e;
+  --sage-deep: #3a5f47;
+  --amber: #a9682a;
+  --hairline: rgba(35, 52, 42, 0.12);
+  --shadow-card: 0 1px 2px rgba(35, 52, 42, 0.06);
+
+  /* Fonts, bound in layout.tsx via next/font CSS vars */
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-plex-sans);
+  --font-mono: var(--font-plex-mono);
+  --font-zh-sans: var(--font-noto-sans-tc);
+  --font-zh-serif: var(--font-noto-serif-tc);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* high-contrast-dark theme (§5.3) */
+[data-theme="high-contrast-dark"] {
+  --cream: #121814;
+  --paper: #1a231d;
+  --ink: #f0ede6;
+  --ink-soft: #b9c2ba;
+  --hairline: rgba(240, 237, 230, 0.16);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* contrast: high (§5.3) */
+[data-contrast="high"] {
+  --cream: #ffffff;
+  --ink: #101a14;
+}
+[data-contrast="high"][data-theme="high-contrast-dark"] {
+  --cream: #121814;
+  --ink: #f0ede6;
+}
+
+html,
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+* {
+  border-color: var(--hairline);
+}
+
+/* One view scope at a time; --scale drives every size token on the Popo view. */
+[data-view] {
+  --scale: 1;
+}
+
+[data-view="popo"] * {
+  font-family: var(--font-zh-sans), var(--font-body), system-ui, sans-serif;
+}
+
+[data-view="family"] .zh {
+  font-family: var(--font-zh-serif), serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+[data-motion="reduced"] * {
+  animation: none !important;
+  transition: none !important;
+}
+
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sage-deep);
+  outline-offset: 2px;
 }

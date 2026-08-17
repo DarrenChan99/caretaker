@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="480" height="600" viewBox="0 0 480 600">
+  <rect width="480" height="600" fill="#3A5F47"/>
+  <circle cx="240" cy="230" r="90" fill="#F5F1EA"/>
+  <rect x="90" y="340" width="300" height="260" rx="150" fill="#F5F1EA"/>
+  <text x="240" y="580" text-anchor="middle" font-family="sans-serif" font-size="28" fill="#F5F1EA">Mary</text>
+</svg>
