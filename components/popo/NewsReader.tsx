@@ -12,25 +12,15 @@ function splitSentences(text: string): string[] {
 export function NewsReader({ headlineZh, passageZh }: { headlineZh: string; passageZh: string }) {
   const sentences = splitSentences(passageZh);
   const [playing, setPlaying] = useState(false);
-  const [current, setCurrent] = useState(-1);
-  const [stopRequested, setStopRequested] = useState(false);
 
   async function read() {
     setPlaying(true);
-    setStopRequested(false);
-    for (let i = 0; i < sentences.length; i++) {
-      if (stopRequested) break;
-      setCurrent(i);
-      await playTts(sentences[i]);
-    }
-    setCurrent(-1);
+    await playTts(passageZh);
     setPlaying(false);
   }
 
   function stop() {
-    setStopRequested(true);
     setPlaying(false);
-    setCurrent(-1);
   }
 
   return (
@@ -39,15 +29,11 @@ export function NewsReader({ headlineZh, passageZh }: { headlineZh: string; pass
         {headlineZh}
       </h1>
 
-      <p className="mt-[calc(24px*var(--scale))] max-w-[18ch] font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] leading-[1.8] text-[var(--ink)]">
-        {sentences.map((s, i) => (
-          <span
-            key={i}
-            style={{ background: i === current ? "rgba(79,125,94,0.15)" : "transparent" }}
-          >
-            {s}
-          </span>
-        ))}
+      <p
+        className="mt-[calc(24px*var(--scale))] max-w-[18ch] font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] leading-[1.8] text-[var(--ink)]"
+        style={{ background: playing ? "rgba(79,125,94,0.15)" : "transparent" }}
+      >
+        {sentences.join("")}
       </p>
 
       <button

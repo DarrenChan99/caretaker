@@ -3,13 +3,19 @@
  * MODEL below — nothing else in the app knows which provider is active.
  */
 export const MODEL = {
-  provider: (process.env.LLM_PROVIDER ?? "anthropic") as "anthropic" | "openai" | "gemini",
+  provider: (process.env.LLM_PROVIDER ?? "anthropic") as
+    | "anthropic"
+    | "openai"
+    | "gemini"
+    | "groq",
   name:
     process.env.LLM_PROVIDER === "openai"
       ? "gpt-4o-mini"
       : process.env.LLM_PROVIDER === "gemini"
         ? "gemini-1.5-flash"
-        : "claude-haiku-4-5-20251001",
+        : process.env.LLM_PROVIDER === "groq"
+          ? "llama-3.3-70b-versatile"
+          : "claude-haiku-4-5-20251001",
 };
 
 const MAX_TOKENS = 150;
@@ -67,6 +73,30 @@ export async function complete(system: string, user: string): Promise<string | n
         }),
       });
       if (!res.ok) throw new Error(`openai ${res.status}`);
+      const data = await res.json();
+      return data.choices?.[0]?.message?.content?.trim() ?? null;
+    }
+
+    if (MODEL.provider === "groq") {
+      const key = process.env.GROQ_API_KEY;
+      if (!key) {
+        console.warn("TODO: missing env var GROQ_API_KEY — translation stubbed");
+        return null;
+      }
+      const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model: MODEL.name,
+          max_tokens: MAX_TOKENS,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+        }),
+      });
+      if (!res.ok) throw new Error(`groq ${res.status}`);
       const data = await res.json();
       return data.choices?.[0]?.message?.content?.trim() ?? null;
     }
