@@ -10,7 +10,7 @@ interface DeliverResult {
 }
 
 async function deliverMessage(): Promise<DeliverResult> {
-  // Text + Azure TTS on tap is the whole job here, and it already happened:
+  // Text + tap-to-play Vapi TTS is the whole job here, and it already happened:
   // the row is in relay_messages and the SSE "message" event was published by the
   // route handler before deliver() was called. Nothing further to push.
   return { ok: true };
