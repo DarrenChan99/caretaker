@@ -16,7 +16,7 @@ export default function PopoLayout({ children }: { children: React.ReactNode }) 
         </EntryGate>
         <Link
           href="/popo/settings"
-          aria-label="設定"
+          aria-label="Settings"
           className="absolute bottom-2 right-2 rounded-full p-2 text-[var(--ink)] opacity-30"
         >
           <Settings size={20} />

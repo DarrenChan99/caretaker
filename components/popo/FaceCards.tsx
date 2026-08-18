@@ -23,7 +23,7 @@ export function FaceCards({ people }: { people: Person[] }) {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center gap-[calc(24px*var(--scale))] px-8 text-center">
         <p className="font-[family-name:var(--font-zh-sans)] text-[calc(28px*var(--scale))] font-bold">
-          仲未有家人資料
+No family info yet
         </p>
         <Link
           href="/popo"

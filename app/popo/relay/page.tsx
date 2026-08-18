@@ -146,14 +146,14 @@ export default function PopoRelayPage() {
           <input
             value={typed}
             onChange={(e) => setTyped(e.target.value)}
-            placeholder="打字回覆"
+            placeholder="Type a reply"
             className="min-h-[max(72px,calc(44px*var(--scale)))] flex-1 rounded-[12px] border-2 border-[var(--sage)] bg-[var(--paper)] px-4 font-[family-name:var(--font-zh-sans)] text-[calc(22px*var(--scale))] text-[var(--ink)]"
           />
           <button
             type="submit"
             className="min-h-[max(72px,calc(44px*var(--scale)))] rounded-[12px] bg-[var(--sage)] px-6 font-[family-name:var(--font-zh-sans)] text-[calc(20px*var(--scale))] text-white"
           >
-            送
+Send
           </button>
         </form>
       </Screen>
@@ -165,7 +165,7 @@ export default function PopoRelayPage() {
     <Screen>
       <Volume2 size={64} className="text-[var(--sage)]" />
       <p className="font-[family-name:var(--font-zh-sans)] text-[calc(28px*var(--scale))] font-medium text-[var(--ink)]">
-        已經傳咗畀屋企人
+Sent to family
       </p>
       <HomeButton router={router} />
     </Screen>

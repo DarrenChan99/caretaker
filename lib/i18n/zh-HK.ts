@@ -1,31 +1,35 @@
 /**
  * All Cantonese / Traditional Chinese UI strings, flat. No inline Chinese in components.
  * FLAG FOR REVIEW: machine-drafted register, not verified by a native speaker (§12).
+ *
+ * Demo override: values below are English for the /popo demo. The export name (zhHK)
+ * and keys are unchanged so no import sites needed to move — swap values back to
+ * Cantonese to restore the real elder-facing copy.
  */
 export const zhHK = {
   // Shared
-  needsEdit: "〔請編輯：介紹句子〕",
+  needsEdit: "[Please edit: intro sentence]",
 
   // /popo entry gate
-  entryTitle: "開始",
-  entryHint: "㩒一下開始",
+  entryTitle: "Start",
+  entryHint: "Tap to start",
 
   // /popo home
-  greeting: (name: string) => `${name}，你好`,
-  homeFamily: "家人",
-  homeNews: "今日新聞",
-  homeChat: "傾偈",
-  someoneIsCalling: "有人搵你",
+  greeting: (name: string) => `Hi, ${name}`,
+  homeFamily: "Family",
+  homeNews: "Today's News",
+  homeChat: "Chat",
+  someoneIsCalling: "Someone is calling you",
 
   // /popo/people
-  whoIsThis: "佢係邊個",
-  yourRelation: (relZh: string) => `你嘅${relZh}`,
+  whoIsThis: "Who is this",
+  yourRelation: (relZh: string) => `Your ${relZh}`,
 
   // /popo/news
-  readToMe: "讀畀我聽",
-  stop: "停",
-  noNewsToday: "今日未有新聞",
-  backHome: "返去",
+  readToMe: "Read to me",
+  stop: "Stop",
+  noNewsToday: "No news today",
+  backHome: "Home",
 
   // /popo/games
   homeGames: "玩遊戲",
@@ -43,18 +47,18 @@ export const zhHK = {
   reminderLater: "唔緊要，得閒飲啖水、食粒藥啦",
 
   // /popo/call
-  chat: "傾偈",
-  hangUp: "收線",
+  chat: "Chat",
+  hangUp: "Hang up",
 
   // relay: popo-side call screen
-  incomingCallTitle: "有人搵你",
-  answer: "接聽",
-  iWantToSpeak: "我要講嘢",
-  listening: "聽緊你講",
-  connecting: "接緊線",
-  connectionLostCalm: "而家連唔到線，請等一等",
+  incomingCallTitle: "Someone is calling you",
+  answer: "Answer",
+  iWantToSpeak: "I want to speak",
+  listening: "Listening...",
+  connecting: "Connecting...",
+  connectionLostCalm: "Can't connect right now, please wait",
 
   // /family strings that surface Chinese
-  medNotConfirmed: "未確認食藥",
-  medConfirmed: "已確認食藥",
+  medNotConfirmed: "Medication not confirmed",
+  medConfirmed: "Medication confirmed",
 } as const;

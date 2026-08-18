@@ -13,10 +13,10 @@ export default function PopoSettingsPage() {
   return (
     <div className="flex min-h-dvh flex-col gap-[calc(24px*var(--scale))] px-[calc(24px*var(--scale))] py-[calc(32px*var(--scale))]">
       <h1 className="font-[family-name:var(--font-zh-sans)] text-[calc(36px*var(--scale))] font-bold">
-        設定
+        Settings
       </h1>
 
-      <SettingRow label="字體大小">
+      <SettingRow label="Text size">
         {TEXT_SCALES.map((scale) => (
           <OptionButton
             key={scale}
@@ -28,31 +28,31 @@ export default function PopoSettingsPage() {
         ))}
       </SettingRow>
 
-      <SettingRow label="對比度">
+      <SettingRow label="Contrast">
         {(["standard", "high"] as const).map((c) => (
           <OptionButton
             key={c}
             active={settings.contrast === c}
             onClick={() => update({ contrast: c })}
           >
-            {c === "standard" ? "標準" : "高對比"}
+            {c === "standard" ? "Standard" : "High contrast"}
           </OptionButton>
         ))}
       </SettingRow>
 
-      <SettingRow label="主題">
+      <SettingRow label="Theme">
         {(["cream", "high-contrast-dark"] as const).map((t) => (
           <OptionButton
             key={t}
             active={settings.theme === t}
             onClick={() => update({ theme: t })}
           >
-            {t === "cream" ? "淺色" : "深色"}
+            {t === "cream" ? "Light" : "Dark"}
           </OptionButton>
         ))}
       </SettingRow>
 
-      <SettingRow label="講嘢速度">
+      <SettingRow label="Speech rate">
         {VOICE_RATES.map((rate) => (
           <OptionButton
             key={rate}

@@ -10,8 +10,8 @@ import { DestinationButton } from "@/components/popo/DestinationButton";
 
 export default async function PopoHome() {
   const [elder] = await db.select().from(elders).where(eq(elders.id, "popo"));
-  const name = elder?.preferredNameZh ?? "婆婆";
-  const dateZh = new Intl.DateTimeFormat("zh-Hant", {
+  const name = elder?.preferredNameZh ?? "Grandma";
+  const dateZh = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",

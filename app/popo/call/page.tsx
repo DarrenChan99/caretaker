@@ -22,7 +22,7 @@ export default function PopoCallPage() {
       </p>
       {tried && (
         <p className="max-w-[18ch] font-[family-name:var(--font-zh-sans)] text-[calc(24px*var(--scale))] text-[var(--ink)]">
-          而家未有得傾偈，等一等啦
+Chat isn&apos;t available yet, please wait
         </p>
       )}
     </div>
