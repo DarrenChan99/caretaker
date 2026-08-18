@@ -92,3 +92,39 @@ Your text is spoken aloud by a TTS voice; she never sees it.
 /** Vapi firstMessage — she taps 傾偈 and hears this before she has to think of anything. */
 export const COMPANION_FIRST_MESSAGE =
   "{{preferredName}}，你好呀，我係阿妹。今日精神好唔好呀？";
+
+/** The five slots the prompt reads. Everything here is optional — see FALLBACKS. */
+export interface CompanionVariables {
+  preferredName: string;
+  facilityName: string;
+  familyMembers: string;
+  lastCallSummary: string;
+  medications: string;
+}
+
+/**
+ * What a blank field becomes. Written as instructions rather than placeholder nouns so
+ * an empty box degrades into "ask an open question" instead of the voice saying
+ * "undefined" out loud — the one failure the room would definitely hear.
+ */
+export const VARIABLE_FALLBACKS: CompanionVariables = {
+  preferredName: "婆婆",
+  facilityName: "her care home",
+  familyMembers: "(no family details given — ask about her family rather than naming anyone)",
+  lastCallSummary: "(no notes from last time — open with an ordinary question instead)",
+  medications: "(none given — do not raise medication at all)",
+};
+
+export const VARIABLE_ORDER = Object.keys(VARIABLE_FALLBACKS) as (keyof CompanionVariables)[];
+
+/**
+ * Substitutes the {{slots}} in a template. Used for the client-side demo, where the whole
+ * filled prompt is handed to Vapi inline; a dashboard assistant would instead receive these
+ * same keys as assistantOverrides.variableValues and substitute them server-side.
+ */
+export function fillPrompt(template: string, vars: Partial<CompanionVariables>): string {
+  return VARIABLE_ORDER.reduce((text, key) => {
+    const value = vars[key]?.trim() || VARIABLE_FALLBACKS[key];
+    return text.replaceAll(`{{${key}}}`, value);
+  }, template);
+}
