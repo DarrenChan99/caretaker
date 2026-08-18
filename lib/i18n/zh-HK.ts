@@ -27,6 +27,21 @@ export const zhHK = {
   noNewsToday: "今日未有新聞",
   backHome: "返去",
 
+  // /popo/games
+  homeGames: "玩遊戲",
+  gamesTitle: "玩遊戲",
+  leaderboard: "最高分",
+  leaderboardEmpty: "仲未有分數，玩一鋪先啦",
+  scoreUnit: (n: number) => `${n} 分`,
+
+  // reminder popup (water + medication)
+  reminderTitle: "提提你",
+  reminderQuestion: "婆婆，飲咗水同食咗藥未呀？",
+  reminderYes: "食咗喇",
+  reminderNo: "未呀",
+  reminderThanks: "好呀，多謝婆婆",
+  reminderLater: "唔緊要，得閒飲啖水、食粒藥啦",
+
   // /popo/call
   chat: "傾偈",
   hangUp: "收線",

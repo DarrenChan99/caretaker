@@ -65,7 +65,7 @@ export const medEvents = pgTable("med_events", {
     .references(() => medications.id),
   occurredAt: createdAt("occurred_at"),
   confirmed: boolean("confirmed").notNull().default(false),
-  source: text("source", { enum: ["call", "family"] }).notNull(),
+  source: text("source", { enum: ["call", "family", "reminder"] }).notNull(),
 });
 
 export const newsItems = pgTable("news_items", {
@@ -99,6 +99,17 @@ export const relayMessages = pgTable("relay_messages", {
   textZh: text("text_zh").notNull(),
   createdAt: createdAt("created_at"),
   playedAt: timestamp("played_at", { mode: "date", withTimezone: true }),
+});
+
+export const gameScores = pgTable("game_scores", {
+  id: id(),
+  elderId: text("elder_id")
+    .notNull()
+    .references(() => elders.id),
+  gameId: text("game_id").notNull(),
+  gameTitleZh: text("game_title_zh").notNull(),
+  score: integer("score").notNull(),
+  achievedAt: createdAt("achieved_at"),
 });
 
 export const relayState = pgTable("relay_state", {

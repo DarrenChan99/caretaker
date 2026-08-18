@@ -67,7 +67,7 @@ export const medEvents = sqliteTable("med_events", {
     .references(() => medications.id),
   occurredAt: createdAt("occurred_at"),
   confirmed: integer("confirmed", { mode: "boolean" }).notNull().default(false),
-  source: text("source", { enum: ["call", "family"] }).notNull(),
+  source: text("source", { enum: ["call", "family", "reminder"] }).notNull(),
 });
 
 export const newsItems = sqliteTable("news_items", {
@@ -105,6 +105,17 @@ export const relayMessages = sqliteTable("relay_messages", {
 
 // One row per elder. DB-backed (not in-process) so the turn flag is correct even
 // when send/receive/stream land on different serverless instances (Vercel).
+export const gameScores = sqliteTable("game_scores", {
+  id: id(),
+  elderId: text("elder_id")
+    .notNull()
+    .references(() => elders.id),
+  gameId: text("game_id").notNull(),
+  gameTitleZh: text("game_title_zh").notNull(),
+  score: integer("score").notNull(),
+  achievedAt: createdAt("achieved_at"),
+});
+
 export const relayState = sqliteTable("relay_state", {
   elderId: text("elder_id").primaryKey(),
   whoseTurn: text("whose_turn", { enum: ["family", "popo", "idle"] }).notNull().default("family"),

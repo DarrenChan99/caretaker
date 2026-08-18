@@ -1,0 +1,3181 @@
+<!DOCTYPE html>
+<html lang="zh-HK">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>玩遊戲</title>
+<style>
+/* === CUSTOMIZE: THEME DEFAULTS (page + board contrast) ===
+   These are the fallback values for theme 0. The full theme list
+   lives in the script section: search for "CUSTOMIZE: THEME COLORS". */
+:root {
+  --bg: #0a0f1e;
+  --board-bg: #263047;
+  --board-line: #40507a;
+  --cell-empty: rgba(148, 163, 184, 0.10);
+  --cell-border: rgba(148, 163, 184, 0.30);
+  --surface: #27272a;
+  --surface-2: #1e1e21;
+  --surface-3: #323236;
+  --line: #3f3f46;
+  --text: #e4e4e7;
+  --text-dim: #a1a1aa;
+  --text-faint: #71717a;
+  --accent: #6366f1;
+  --accent-soft: rgba(99, 102, 241, 0.16);
+  --accent-glow: rgba(99, 102, 241, 0.45);
+  --danger: #f43f5e;
+  --teal: #14b8a6;
+  --rose: #f43f5e;
+  --amber: #f59e0b;
+  --slateC: #64748b;
+  --emerald: #34d399;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+html, body { height: 100%; }
+
+html { overscroll-behavior: none; }
+
+body {
+  background-image:
+    radial-gradient(1100px 600px at 80% -10%, rgba(99, 102, 241, 0.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(20, 184, 166, 0.05), transparent 60%);
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: "Noto Sans HK", "PingFang HK", "Hiragino Sans CG", "Microsoft JhengHei", Inter, system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  transition: background-color 0.6s ease;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Scroll lock while a game is active (menu stays scrollable) */
+body.playing {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.playing #app {
+  height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-top: 12px;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#app { max-width: 1060px; margin: 0 auto; padding: 24px 20px 60px; }
+
+.view { animation: viewIn 0.45s var(--ease); }
+.hidden { display: none !important; }
+
+@keyframes viewIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Dashboard ---------- */
+
+.hero { text-align: center; padding: 64px 0 44px; }
+
+.hero h1 {
+  font-size: clamp(30px, 6vw, 52px);
+  font-weight: 800;
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  background: linear-gradient(120deg, #f4f4f5 30%, #a5b4fc 70%, var(--accent));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.hero p {
+  margin-top: 14px;
+  color: var(--text-dim);
+  font-size: 15px;
+  letter-spacing: 0.04em;
+}
+
+.hero .rule {
+  width: 56px;
+  height: 2px;
+  margin: 26px auto 0;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 18px;
+}
+
+.card {
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 24px 22px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: transform 0.3s var(--ease), border-color 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.12);
+}
+
+.card .glyph {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(99, 102, 241, 0.35);
+  display: grid;
+  place-items: center;
+  margin-bottom: 6px;
+}
+
+.card .glyph svg { width: 20px; height: 20px; stroke: #a5b4fc; }
+
+.card h3 { font-size: 17px; font-weight: 700; letter-spacing: 0.02em; }
+
+.card p { color: var(--text-dim); font-size: 13.5px; line-height: 1.55; flex: 1; }
+
+.card .card-meta { color: var(--text-faint); font-size: 12px; letter-spacing: 0.05em; }
+
+.card .play-btn {
+  margin-top: 12px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: 0.03em;
+  transition: background 0.25s, transform 0.15s;
+}
+
+.card .play-btn:hover { background: #5457e0; }
+.card .play-btn:active { transform: scale(0.97); }
+
+/* ---------- Game shell ---------- */
+
+.game-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: rgba(39, 39, 42, 0.75);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 12px;
+  z-index: 20;
+  margin-bottom: 22px;
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-size: 13px;
+  font-weight: 600;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.back-btn:hover { color: var(--text); border-color: var(--accent); }
+
+.game-header h2 {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  flex: 1;
+}
+
+.score-chips { display: flex; gap: 10px; }
+
+.chip {
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+  text-align: center;
+  min-width: 78px;
+  position: relative;
+}
+
+.chip .label {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.chip .value { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.chip.best .value { color: #a5b4fc; }
+
+.chip.glowing .value {
+  color: #fff;
+  animation: scoreGlow 1.3s ease-in-out infinite;
+}
+
+@keyframes scoreGlow {
+  0%, 100% { text-shadow: 0 0 8px var(--accent-glow); }
+  50% { text-shadow: 0 0 16px var(--accent-glow), 0 0 30px var(--accent-glow); }
+}
+
+.float-score {
+  position: absolute;
+  left: 50%;
+  top: -6px;
+  transform: translateX(-50%);
+  color: var(--emerald);
+  font-weight: 700;
+  font-size: 14px;
+  pointer-events: none;
+  animation: floatUp 0.8s var(--ease) forwards;
+}
+
+@keyframes floatUp {
+  from { opacity: 0; transform: translate(-50%, 6px); }
+  20% { opacity: 1; }
+  to { opacity: 0; transform: translate(-50%, -26px); }
+}
+
+.game-stage { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+
+.substats { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+.substats .chip { min-width: 92px; }
+
+.hint { color: var(--text-faint); font-size: 12.5px; letter-spacing: 0.03em; text-align: center; }
+
+/* ---------- Block Blast ---------- */
+/* === CUSTOMIZE: BOARD SIZING (cell sizes per game) ===
+   Each board's cell size is min(mobile-fit-formula, desktop-max-px).
+   If you change BB_BOARD_SIZE in the script, also update the two 8s below. */
+
+.bb-board {
+  --bb-cell: min(calc((100vw - 68px) / 8), 50px);
+  display: grid;
+  grid-template-columns: repeat(8, var(--bb-cell));
+  grid-auto-rows: var(--bb-cell);
+  gap: 3px;
+  padding: 10px;
+  background: var(--board-bg);
+  border: 1px solid var(--board-line);
+  border-radius: var(--radius);
+  touch-action: none;
+  user-select: none;
+  transition: background 0.6s ease, border-color 0.6s ease;
+  position: relative;
+}
+
+.bb-cell {
+  border-radius: 6px;
+  background: var(--cell-empty);
+  border: 1px solid var(--cell-border);
+  transition: background 0.15s, box-shadow 0.15s, opacity 0.3s, transform 0.3s, border-color 0.6s;
+}
+
+.bb-cell.filled { border-color: transparent; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+
+.bb-cell.preview-ghost { border-color: transparent; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12); }
+.bb-cell.line-hot {
+  box-shadow: inset 0 0 0 2px rgba(224, 231, 255, 0.95), 0 0 14px rgba(99, 102, 241, 0.85), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+  animation: lineHot 0.6s ease-in-out infinite alternate;
+  z-index: 1;
+  position: relative;
+}
+
+@keyframes lineHot {
+  from { filter: brightness(1.15); box-shadow: inset 0 0 0 2px rgba(224, 231, 255, 0.85), 0 0 8px rgba(99, 102, 241, 0.6), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+  to { filter: brightness(1.55); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 1), 0 0 18px rgba(129, 140, 248, 1), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+}
+
+.bb-cell.pop { animation: cellPop 0.32s var(--ease); }
+
+/* Combo popup on the board edge */
+.combo-pop {
+  position: absolute;
+  right: 6px;
+  font-weight: 800;
+  font-size: clamp(16px, 3.4vw, 22px);
+  letter-spacing: 0.06em;
+  color: var(--accent);
+  text-shadow: 0 0 14px var(--accent-glow), 0 1px 2px rgba(0, 0, 0, 0.6);
+  pointer-events: none;
+  white-space: nowrap;
+  z-index: 6;
+  animation: comboPop 1.1s var(--ease) forwards;
+}
+
+@keyframes comboPop {
+  0% { opacity: 0; transform: scale(0.4) rotate(-8deg); }
+  25% { opacity: 1; transform: scale(1.2) rotate(4deg); }
+  45% { transform: scale(1) rotate(0deg); }
+  75% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(-22px) scale(0.85); }
+}
+
+/* Board clear: thrown-up-toward-the-camera popup */
+.bc-fx {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 80;
+}
+
+.bc-fx span {
+  font-size: clamp(30px, 7vw, 58px);
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-indent: 0.22em;
+  color: #fff;
+  text-shadow: 0 0 24px var(--accent-glow), 0 0 60px var(--accent-glow);
+  animation: tossUp 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes tossUp {
+  0% { transform: scale(0.18) rotate(-11deg); opacity: 0; }
+  30% { transform: scale(1.42) rotate(6deg); opacity: 1; }
+  52% { transform: scale(1.3) rotate(2deg); opacity: 1; }
+  100% { transform: scale(0.32) rotate(-7deg); opacity: 0; }
+}
+
+@keyframes cellPop {
+  0% { transform: scale(0.55); }
+  60% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+.bb-cell.clearing { opacity: 0; transform: scale(0.35); }
+
+.bb-cell.flood-cell {
+  border-color: transparent;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* Bomb countdown badge (board cells, tray minis, drag ghost) */
+.bb-cell, .bb-mini { position: relative; }
+
+.bomb-badge {
+  position: absolute;
+  inset: 12%;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.82);
+  border: 2px solid rgba(255, 255, 255, 0.9);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: clamp(11px, 2.6vw, 15px);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.bomb-badge.mini { font-size: 9px; border-width: 1.5px; inset: 6%; }
+
+.bomb-badge.urgent {
+  border-color: #f43f5e;
+  color: #fda4af;
+  animation: bombPulse 0.7s ease-in-out infinite;
+}
+
+@keyframes bombPulse {
+  0%, 100% { box-shadow: 0 0 2px rgba(244, 63, 94, 0.5); }
+  50% { box-shadow: 0 0 14px rgba(244, 63, 94, 1); transform: scale(1.08); }
+}
+
+/* Explosion */
+.bb-cell.exploding {
+  animation: cellExplode 0.75s var(--ease) forwards;
+  z-index: 3;
+}
+
+@keyframes cellExplode {
+  0% { filter: brightness(2.2); transform: scale(1.05); }
+  55% { filter: brightness(3); transform: scale(1.5); opacity: 0.9; }
+  100% { transform: scale(0.15); opacity: 0; }
+}
+
+.shockwave {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  margin: -22px 0 0 -22px;
+  border: 4px solid #f59e0b;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 5;
+  animation: shock 0.8s ease-out forwards;
+}
+
+@keyframes shock {
+  from { transform: scale(0.2); opacity: 1; box-shadow: 0 0 30px rgba(245, 158, 11, 0.9); }
+  to { transform: scale(7); opacity: 0; }
+}
+
+.bb-tray {
+  display: flex;
+  gap: 30px;
+  justify-content: center;
+  min-height: 130px;
+  align-items: center;
+  flex-wrap: wrap;
+  touch-action: none;
+  align-self: stretch;
+  padding: 12px 0;
+  cursor: grab;
+}
+
+.bb-piece { display: grid; gap: 3px; cursor: grab; transition: opacity 0.25s, transform 0.25s; user-select: none; }
+.bb-piece.used { opacity: 0; pointer-events: none; transform: scale(0.6); }
+.bb-piece.dead { opacity: 0.28; filter: grayscale(0.6); }
+
+.bb-mini {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+}
+
+.bb-mini.empty { visibility: hidden; }
+
+.bb-ghost {
+  position: fixed;
+  display: grid;
+  gap: 3px;
+  pointer-events: none;
+  z-index: 60;
+  opacity: 0.94;
+  filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.45));
+  transition: transform 0.18s var(--ease);
+  transform-origin: 50% 100%;
+  will-change: left, top;
+}
+
+.bb-ghost .bb-mini { width: var(--bb-cell); height: var(--bb-cell); border-radius: 6px; }
+
+/* ---------- Tile Merge ---------- */
+
+.tm-wrap {
+  position: relative;
+  touch-action: none;
+  user-select: none;
+  --tm-cell: min(calc((100vw - 80px) / 4), 96px);
+  --tm-gap: 10px;
+}
+
+.tm-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(4, var(--tm-cell));
+  grid-auto-rows: var(--tm-cell);
+  gap: var(--tm-gap);
+  padding: var(--tm-gap);
+  background: var(--board-bg);
+  border: 1px solid var(--board-line);
+  border-radius: 16px;
+  transition: background 0.6s ease, border-color 0.6s ease;
+}
+
+.tm-slot { border-radius: 10px; background: var(--cell-empty); transition: background 0.6s ease; }
+
+.tm-tile {
+  position: absolute;
+  width: var(--tm-cell);
+  height: var(--tm-cell);
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  font-size: clamp(18px, 4.6vw, 32px);
+  transition: transform 0.14s ease-out;
+  will-change: transform;
+  color: #fafafa;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.22);
+}
+
+.tm-tile.small-text { font-size: clamp(14px, 3.4vw, 24px); }
+
+.tm-tile.spawn { animation: tmSpawn 0.22s var(--ease); }
+@keyframes tmSpawn { from { scale: 0.4; opacity: 0; } to { scale: 1; opacity: 1; } }
+
+.tm-tile.bounce { animation: tmBounce 0.28s var(--ease); }
+@keyframes tmBounce { 0% { scale: 1; } 45% { scale: 1.22; } 100% { scale: 1; } }
+
+/* === CUSTOMIZE: TILE MERGE TILE COLORS (one class per value) === */
+.tv-2 { background: #3f3f46; color: #d4d4d8; }
+.tv-4 { background: #52525b; color: #e4e4e7; }
+.tv-8 { background: #475569; }
+.tv-16 { background: #4f6285; }
+.tv-32 { background: #5364a8; }
+.tv-64 { background: #5a5fd1; }
+.tv-128 { background: linear-gradient(135deg, #6366f1, #5457e0); }
+.tv-256 { background: linear-gradient(135deg, #6366f1, #7c6cf5); box-shadow: 0 0 14px rgba(99, 102, 241, 0.35), inset 0 -3px 0 rgba(0,0,0,0.22); }
+.tv-512 { background: linear-gradient(135deg, #7c6cf5, #57a6a8); box-shadow: 0 0 16px rgba(99, 102, 241, 0.45), inset 0 -3px 0 rgba(0,0,0,0.22); }
+.tv-1024 { background: linear-gradient(135deg, #6d6bf2, #40b39a); box-shadow: 0 0 20px rgba(72, 187, 170, 0.4), inset 0 -3px 0 rgba(0,0,0,0.22); }
+.tv-2048 { background: linear-gradient(130deg, #6366f1, #34d399); box-shadow: 0 0 26px rgba(52, 211, 153, 0.55), inset 0 -3px 0 rgba(0,0,0,0.22); animation: tmGlow 2.4s ease-in-out infinite; }
+.tv-big { background: linear-gradient(130deg, #818cf8, #34d399, #6366f1); background-size: 220% 220%; box-shadow: 0 0 30px rgba(99, 102, 241, 0.6), inset 0 -3px 0 rgba(0,0,0,0.22); animation: tmShift 4s ease infinite; }
+
+@keyframes tmGlow {
+  0%, 100% { box-shadow: 0 0 18px rgba(52, 211, 153, 0.4), inset 0 -3px 0 rgba(0,0,0,0.22); }
+  50% { box-shadow: 0 0 32px rgba(52, 211, 153, 0.7), inset 0 -3px 0 rgba(0,0,0,0.22); }
+}
+
+@keyframes tmShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+/* ---------- Color Flood ---------- */
+
+.cf-board {
+  --cf-cell: min(calc((100vw - 72px) / 12), 34px);
+  display: grid;
+  grid-template-columns: repeat(12, var(--cf-cell));
+  grid-auto-rows: var(--cf-cell);
+  gap: 2px;
+  padding: 10px;
+  background: var(--board-bg);
+  border: 1px solid var(--board-line);
+  border-radius: var(--radius);
+  user-select: none;
+  transition: background 0.6s ease, border-color 0.6s ease;
+}
+
+.cf-cell { border-radius: 4px; transition: background 0.24s ease, filter 0.24s ease; }
+
+.cf-cell.origin { position: relative; }
+
+.cf-cell.origin::after {
+  content: '';
+  position: absolute;
+  inset: 26%;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  border-radius: 50%;
+  box-shadow: 0 0 5px rgba(15, 23, 42, 0.55), inset 0 0 4px rgba(15, 23, 42, 0.35);
+  animation: originPulse 2s ease-in-out infinite;
+}
+
+@keyframes originPulse {
+  0%, 100% { transform: scale(1); opacity: 0.95; }
+  50% { transform: scale(0.8); opacity: 0.65; }
+}
+
+.cf-palette { display: flex; gap: 12px; }
+
+.cf-swatch {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 2px solid transparent;
+  transition: transform 0.18s var(--ease), border-color 0.2s, box-shadow 0.2s;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.cf-swatch:hover { transform: translateY(-3px); }
+.cf-swatch.active { border-color: #fff; box-shadow: 0 0 0 3px var(--accent-glow), inset 0 -3px 0 rgba(0,0,0,0.25); }
+.cf-swatch:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+.cf-perfect {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  z-index: 70;
+}
+
+.cf-perfect span {
+  font-size: clamp(34px, 8vw, 64px);
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: #a5b4fc;
+  text-shadow: 0 0 30px var(--accent-glow);
+  animation: perfectFlash 1.4s var(--ease) forwards;
+}
+
+@keyframes perfectFlash {
+  0% { opacity: 0; transform: scale(0.7); }
+  25% { opacity: 1; transform: scale(1.06); }
+  70% { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.05); }
+}
+
+/* ---------- Path Connector ---------- */
+
+.pc-wrap { position: relative; touch-action: none; user-select: none; }
+
+.pc-board {
+  --pc-cell: min(calc((100vw - 46px) / 6), 72px);
+  display: grid;
+  grid-template-columns: repeat(6, var(--pc-cell));
+  grid-auto-rows: var(--pc-cell);
+  gap: 0;
+  padding: 8px;
+  background: var(--board-bg);
+  border: 1px solid var(--board-line);
+  border-radius: var(--radius);
+  transition: background 0.6s ease, border-color 0.6s ease;
+}
+
+.pc-cell { border: 1px solid var(--cell-border); transition: border-color 0.6s; }
+
+.pc-svg { position: absolute; inset: 0; pointer-events: none; }
+
+.pc-path { fill: none; stroke-linecap: round; stroke-linejoin: round; opacity: 0.92; }
+
+.pc-path.complete { animation: pathGlow 1.6s ease-in-out infinite; }
+
+@keyframes pathGlow {
+  0%, 100% { filter: drop-shadow(0 0 2px currentColor); }
+  50% { filter: drop-shadow(0 0 9px currentColor); }
+}
+
+.pc-node { stroke: rgba(15, 23, 42, 0.7); stroke-width: 3; }
+.pc-node.complete { animation: pathGlow 1.6s ease-in-out infinite; }
+
+/* ---------- Overlay ---------- */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: viewIn 0.3s var(--ease);
+  padding: 20px;
+}
+
+.overlay-card {
+  background: linear-gradient(180deg, var(--surface), var(--surface-2));
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 36px 40px;
+  text-align: center;
+  width: min(400px, 92vw);
+  animation: cardIn 0.45s var(--ease);
+}
+
+@keyframes cardIn {
+  0% { opacity: 0; transform: scale(0.45); }
+  70% { opacity: 1; transform: scale(1.04); }
+  100% { opacity: 1; transform: none; }
+}
+
+.overlay-card .ov-eyebrow {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+
+.overlay-card h3 { font-size: 26px; font-weight: 800; margin: 8px 0 20px; letter-spacing: 0.02em; }
+
+.overlay-card h3.reminder-question { font-size: 21px; line-height: 1.45; }
+
+.ov-scores { display: flex; justify-content: center; gap: 14px; margin-bottom: 10px; }
+
+.ov-box {
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 12px 20px;
+  min-width: 110px;
+}
+
+.ov-box .label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-faint); }
+.ov-box .value { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 3px; }
+.ov-box.hl .value { color: #a5b4fc; }
+
+.ov-badge {
+  display: inline-block;
+  margin: 4px 0 8px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  border: 1px solid rgba(99, 102, 241, 0.45);
+  color: #a5b4fc;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.ov-extra { color: var(--text-dim); font-size: 13.5px; margin-bottom: 6px; }
+
+.ov-actions { display: flex; gap: 12px; justify-content: center; margin-top: 22px; flex-wrap: wrap; }
+
+.ov-peek-hint {
+  margin-top: 16px;
+  color: var(--text-faint);
+  font-size: 11.5px;
+  letter-spacing: 0.05em;
+}
+
+/* Floating pill to reopen the results after peeking at the board */
+.peek-pill {
+  position: fixed;
+  bottom: 26px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 95;
+  padding: 11px 24px;
+  border-radius: 999px;
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.45), 0 0 0 3px var(--accent-soft);
+  animation: viewIn 0.3s var(--ease);
+}
+
+.peek-pill:active { transform: translateX(-50%) scale(0.96); }
+
+.btn-primary {
+  padding: 12px 28px;
+  border-radius: var(--radius-sm);
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.btn-primary:hover { background: #5457e0; }
+.btn-primary:active { transform: scale(0.97); }
+
+.btn-ghost {
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  color: var(--text-dim);
+  font-weight: 600;
+  font-size: 14px;
+  transition: color 0.2s, border-color 0.2s;
+}
+
+.btn-ghost:hover { color: var(--text); border-color: var(--accent); }
+
+@media (max-width: 560px) {
+  #app { padding: 14px 12px 40px; }
+  .hero { padding: 40px 0 30px; }
+  .game-header { flex-wrap: wrap; gap: 10px; }
+  .game-header h2 { order: -1; width: 100%; text-align: center; }
+  .chip { min-width: 68px; padding: 5px 10px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Extra overlay styling for the reminder popup so it appears on top */
+.reminder-overlay {
+  z-index: 200;
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <section id="menu" class="view">
+    <header class="hero">
+      <h1>玩遊戲</h1>
+      <p>五個輕鬆嘅遊戲。慢慢玩，唔使急。</p>
+      <div class="rule"></div>
+    </header>
+    <div class="card-grid" id="cardGrid"></div>
+  </section>
+
+  <section id="game" class="view hidden">
+    <header class="game-header">
+      <button id="backBtn" class="back-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        返去
+      </button>
+      <h2 id="gameTitle"></h2>
+      <div class="score-chips">
+        <div class="chip">
+          <span class="label">分數</span>
+          <span class="value" id="scoreVal">0</span>
+        </div>
+        <div class="chip best" id="bestChip">
+          <span class="label">最高分</span>
+          <span class="value" id="bestVal">0</span>
+        </div>
+      </div>
+    </header>
+    <div id="gameRoot"></div>
+  </section>
+</div>
+<script>
+'use strict';
+
+/* ============================================================
+   Storage (localStorage with in-memory fallback)
+   ============================================================ */
+const Store = (() => {
+  const mem = {};
+  let usable = false;
+  try {
+    localStorage.setItem('__mp_test__', '1');
+    localStorage.removeItem('__mp_test__');
+    usable = true;
+  } catch (e) {
+    usable = false;
+  }
+  return {
+    get(key, fallback = 0) {
+      if (key in mem) return mem[key];
+      if (usable) {
+        try {
+          const raw = localStorage.getItem(key);
+          if (raw !== null) return JSON.parse(raw);
+        } catch (e) { /* fall through */ }
+      }
+      return fallback;
+    },
+    set(key, value) {
+      mem[key] = value;
+      if (usable) {
+        try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* quota or blocked */ }
+      }
+    }
+  };
+})();
+
+/* ============================================================
+   Helpers
+   ============================================================ */
+const $ = (sel, root = document) => root.querySelector(sel);
+const el = (tag, cls, parent) => {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (parent) parent.appendChild(node);
+  return node;
+};
+const randInt = (n) => Math.floor(Math.random() * n);
+const pick = (arr) => arr[randInt(arr.length)];
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function shuffle(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = randInt(i + 1);
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+
+/* ============================================================
+   Themes
+   ============================================================ */
+/* === CUSTOMIZE: THEME COLORS ===
+   Add, remove, or edit themes here. Each theme restyles the page
+   background, board surface, grid lines, and accent color.
+   blocks: the pool of piece colors for Block Blast in that theme.
+   When the theme switches, every block on the board is remapped to
+   a new unique random color from the new pool (keep 7+ colors).
+   THEME_SWITCH_POINTS controls how many points before the next
+   theme kicks in (themes cycle in order). */
+const THEME_SWITCH_POINTS = 750;
+
+const THEMES = [
+  {
+    name: 'Indigo Night',
+    blocks: ['#6366f1', '#14b8a6', '#f43f5e', '#f59e0b', '#38bdf8', '#a78bfa', '#34d399'],
+    vars: {
+      '--bg': '#0a0f1e', '--board-bg': '#263047', '--board-line': '#40507a',
+      '--cell-empty': 'rgba(148, 163, 184, 0.10)', '--cell-border': 'rgba(148, 163, 184, 0.30)',
+      '--accent': '#6366f1', '--accent-soft': 'rgba(99, 102, 241, 0.16)', '--accent-glow': 'rgba(99, 102, 241, 0.45)'
+    }
+  },
+  {
+    name: 'Ember',
+    blocks: ['#f59e0b', '#f97316', '#ef4444', '#eab308', '#fb7185', '#e11d48', '#fdba74'],
+    vars: {
+      '--bg': '#150d08', '--board-bg': '#3a241a', '--board-line': '#6b4226',
+      '--cell-empty': 'rgba(251, 191, 36, 0.08)', '--cell-border': 'rgba(251, 191, 36, 0.28)',
+      '--accent': '#f59e0b', '--accent-soft': 'rgba(245, 158, 11, 0.16)', '--accent-glow': 'rgba(245, 158, 11, 0.45)'
+    }
+  },
+  {
+    name: 'Deep Teal',
+    blocks: ['#14b8a6', '#2dd4bf', '#0ea5e9', '#34d399', '#22d3ee', '#84cc16', '#6366f1'],
+    vars: {
+      '--bg': '#06110f', '--board-bg': '#153732', '--board-line': '#2a6157',
+      '--cell-empty': 'rgba(45, 212, 191, 0.08)', '--cell-border': 'rgba(45, 212, 191, 0.28)',
+      '--accent': '#14b8a6', '--accent-soft': 'rgba(20, 184, 166, 0.16)', '--accent-glow': 'rgba(20, 184, 166, 0.45)'
+    }
+  },
+  {
+    name: 'Violet Haze',
+    blocks: ['#a78bfa', '#c084fc', '#e879f9', '#818cf8', '#f472b6', '#8b5cf6', '#38bdf8'],
+    vars: {
+      '--bg': '#0f0a1c', '--board-bg': '#2e2149', '--board-line': '#544080',
+      '--cell-empty': 'rgba(196, 181, 253, 0.09)', '--cell-border': 'rgba(196, 181, 253, 0.28)',
+      '--accent': '#a78bfa', '--accent-soft': 'rgba(167, 139, 250, 0.16)', '--accent-glow': 'rgba(167, 139, 250, 0.45)'
+    }
+  }
+];
+
+let currentThemeIndex = -1;
+function themeBlockPool() {
+  return THEMES[currentThemeIndex >= 0 ? currentThemeIndex : 0].blocks;
+}
+function applyTheme(index) {
+  const i = ((index % THEMES.length) + THEMES.length) % THEMES.length;
+  if (i === currentThemeIndex) return;
+  currentThemeIndex = i;
+  for (const [key, value] of Object.entries(THEMES[i].vars)) {
+    document.documentElement.style.setProperty(key, value);
+  }
+  if (typeof App !== 'undefined' && App.current && typeof App.current.onThemeChange === 'function') {
+    App.current.onThemeChange(THEMES[i]);
+  }
+}
+
+/* ============================================================
+   Sound effects (synthesized, no files needed)
+   ============================================================ */
+/* === CUSTOMIZE: SOUND EFFECTS ===
+   enabled: master on/off. volume: 0 to 1.
+   To use your own audio instead of the built-in synth, set url to a
+   file path or data URI, e.g. place: { url: 'sounds/plop.mp3' }.
+   Synth events: either a single swept tone (freq -> endFreq over
+   duration seconds) or a sequence of notes (Hz) played noteLen apart. */
+const SOUNDS = {
+  enabled: true,
+  volume: 0.5,
+  place: { url: null, freq: 420, endFreq: 160, duration: 0.09, type: 'sine' },
+  clear: { url: null, notes: [523.25, 659.25, 783.99], noteLen: 0.085, type: 'triangle' },
+  boardClear: { url: null, notes: [523.25, 659.25, 783.99, 1046.5, 1318.5], noteLen: 0.1, type: 'triangle' },
+  bomb: { url: null, freq: 180, endFreq: 35, duration: 0.55, type: 'sawtooth' }
+};
+
+const SFX = {
+  ctx: null,
+  ensure() {
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { this.ctx = new AC(); } catch (e) { return null; }
+    }
+    if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+    return this.ctx;
+  },
+  tone(freq, endFreq, start, dur, type, peak) {
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = type;
+    osc.frequency.setValueAtTime(freq, start);
+    if (endFreq) osc.frequency.exponentialRampToValueAtTime(endFreq, start + dur);
+    gain.gain.setValueAtTime(0.0001, start);
+    gain.gain.exponentialRampToValueAtTime(peak, start + 0.012);
+    gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(start);
+    osc.stop(start + dur + 0.03);
+  },
+  play(spec) {
+    if (!SOUNDS.enabled || !spec) return;
+    try {
+      if (spec.url) {
+        const audio = new Audio(spec.url);
+        audio.volume = clamp(SOUNDS.volume, 0, 1);
+        audio.play().catch(() => {});
+        return;
+      }
+      if (!this.ensure()) return;
+      const t = this.ctx.currentTime;
+      const peak = clamp(SOUNDS.volume, 0, 1) * 0.45;
+      if (spec.notes) {
+        spec.notes.forEach((f, i) => this.tone(f, null, t + i * spec.noteLen, spec.noteLen * 1.9, spec.type || 'triangle', peak));
+      } else {
+        this.tone(spec.freq, spec.endFreq, t, spec.duration, spec.type || 'sine', peak);
+      }
+    } catch (e) { /* audio blocked or unsupported */ }
+  }
+};
+
+/* === CUSTOMIZE: COMBO POPUPS (threshold + message text) ===
+   minStreak: streak count at which popups start appearing.
+   format: the message shown for a given streak. */
+const COMBO = {
+  minStreak: 2,
+  format: (streak) => `連住 ${streak} 次！`
+};
+
+/* === CUSTOMIZE: BOARD CLEAR POPUP TEXT === */
+const BOARD_CLEAR_TEXT = '成個棋盤清晒！';
+
+/* === CUSTOMIZE: MEDICATION REMINDER (Global, Time-based) === */
+const REMINDER = {
+  // Off on purpose: caretaker shows its own reminder over this iframe
+  // (components/popo/ReminderPopup.tsx), and two popups would fight.
+  enabled: false,
+  intervalMinutes: 1, // Pops up every 30 minutes
+  question: '婆婆，飲咗水同食咗藥未呀？',
+  yesLabel: '食咗喇',
+  noLabel: '未呀'
+};
+
+/* ============================================================
+   Overlay (game over / level complete)
+   ============================================================ */
+const Overlay = {
+  node: null,
+  pill: null,
+  lastOpts: null,
+  show(opts) {
+    const { eyebrow, title, score, best, newBest, extra, primaryLabel, onPrimary, onMenu, secondaryLabel, onSecondary } = opts;
+    this.hide();
+    this.lastOpts = opts;
+    const wrap = el('div', 'overlay', document.body);
+    wrap.addEventListener('click', (e) => {
+      if (e.target === wrap) this.dismissToPeek();
+    });
+    const card = el('div', 'overlay-card', wrap);
+
+    const eye = el('div', 'ov-eyebrow', card);
+    eye.textContent = eyebrow;
+    const h = el('h3', '', card);
+    h.textContent = title;
+
+    if (newBest) {
+      const badge = el('div', 'ov-badge', card);
+      badge.textContent = '新紀錄';
+    }
+
+    const scores = el('div', 'ov-scores', card);
+    const mk = (label, value, hl) => {
+      const box = el('div', 'ov-box' + (hl ? ' hl' : ''), scores);
+      const l = el('div', 'label', box);
+      l.textContent = label;
+      const v = el('div', 'value', box);
+      v.textContent = value;
+    };
+    mk('分數', score, false);
+    mk('最高分', best, true);
+
+    if (extra) {
+      const ex = el('div', 'ov-extra', card);
+      ex.textContent = extra;
+    }
+
+    const actions = el('div', 'ov-actions', card);
+    const retry = el('button', 'btn-primary', actions);
+    retry.textContent = primaryLabel || '再玩一次';
+    retry.addEventListener('click', () => { this.hide(); onPrimary && onPrimary(); });
+    if (secondaryLabel && onSecondary) {
+      const sec = el('button', 'btn-ghost', actions);
+      sec.textContent = secondaryLabel;
+      sec.addEventListener('click', () => { this.node.remove(); this.node = null; onSecondary(); });
+    }
+    const menu = el('button', 'btn-ghost', actions);
+    menu.textContent = '返去';
+    menu.addEventListener('click', () => { this.hide(); (onMenu || (() => App.navigate('menu')))(); });
+
+    const peekHint = el('div', 'ov-peek-hint', card);
+    peekHint.textContent = '㩒旁邊可以睇返個棋盤';
+
+    this.node = wrap;
+    retry.focus();
+  },
+  dismissToPeek() {
+    if (!this.node) return;
+    this.node.remove();
+    this.node = null;
+    this.showPill();
+  },
+  showPill(label) {
+    this.removePill();
+    const pill = el('button', 'peek-pill', document.body);
+    pill.textContent = label || '睇返結果';
+    pill.addEventListener('click', () => {
+      this.removePill();
+      if (this.lastOpts) this.show(this.lastOpts);
+    });
+    this.pill = pill;
+  },
+  removePill() {
+    if (this.pill) { this.pill.remove(); this.pill = null; }
+  },
+  hide() {
+    if (this.node) { this.node.remove(); this.node = null; }
+    this.removePill();
+  }
+};
+
+/* ============================================================
+   Global Reminder System
+   ============================================================ */
+const ReminderSystem = {
+  timer: null,
+  init() {
+    if (!REMINDER.enabled) return;
+    // Check immediately on load, then check every minute
+    this.check();
+    this.timer = setInterval(() => this.check(), 1);
+  },
+  check() {
+    const now = Date.now();
+    // Default to 'now' so it doesn't instantly pop up on the very first time the app is ever opened
+    const lastShown = Store.get('mp-last-reminder', now); 
+    const intervalMs = REMINDER.intervalMinutes * 60 * 1000 * 30;
+    
+    if (now - lastShown >= intervalMs) {
+      this.showReminder();
+    }
+  },
+  showReminder() {
+    // Prevent multiple overlays if one is already open
+    if (document.querySelector('.reminder-overlay')) return;
+    
+    // Reset the timer in storage
+    Store.set('mp-last-reminder', Date.now());
+
+    // Create the global overlay
+    const wrap = el('div', 'overlay reminder-overlay', document.body);
+    const close = () => wrap.remove();
+    
+    const card = el('div', 'overlay-card', wrap);
+    
+    const eye = el('div', 'ov-eyebrow', card);
+    eye.textContent = '提提你';
+    
+    const h = el('h3', 'reminder-question', card);
+    h.textContent = REMINDER.question;
+    
+    const actions = el('div', 'ov-actions', card);
+    
+    const yes = el('button', 'btn-primary', actions);
+    yes.textContent = REMINDER.yesLabel;
+    yes.addEventListener('click', close);
+    
+    const no = el('button', 'btn-ghost', actions);
+    no.textContent = REMINDER.noLabel;
+    no.addEventListener('click', close);
+    
+    const hint = el('div', 'ov-peek-hint', card);
+    hint.textContent = '㩒個掣就得';
+  }
+};
+
+/* ============================================================
+   App shell / state manager
+   ============================================================ */
+const App = {
+  registry: {},
+  current: null,
+  currentId: null,
+
+  register(id, def) { this.registry[id] = def; },
+
+  navigate(id) {
+    Overlay.hide();
+    document.body.classList.toggle('playing', id !== 'menu');
+    applyTheme(0);
+    if (this.current) {
+      this.current.destroy();
+      this.current = null;
+      this.currentId = null;
+    }
+    const menuView = $('#menu');
+    const gameView = $('#game');
+    if (id === 'menu') {
+      gameView.classList.add('hidden');
+      menuView.classList.remove('hidden');
+      this.renderMenu();
+      return;
+    }
+    const def = this.registry[id];
+    if (!def) return;
+    menuView.classList.add('hidden');
+    gameView.classList.remove('hidden');
+    $('#gameTitle').textContent = def.title;
+    const root = $('#gameRoot');
+    root.innerHTML = '';
+    this.currentId = id;
+    this.current = new def.cls(root, this.makeHud(id));
+  },
+
+  makeHud(id) {
+    const bestKey = 'mp-best-' + id;
+    const scoreVal = $('#scoreVal');
+    const bestVal = $('#bestVal');
+    const bestChip = $('#bestChip');
+    let best = Store.get(bestKey, 0);
+    const startBest = best;
+    const scoreChip = scoreVal.closest('.chip');
+    scoreChip.classList.remove('glowing');
+    let score = 0;
+    scoreVal.textContent = '0';
+    bestVal.textContent = String(best);
+    return {
+      get score() { return score; },
+      get best() { return best; },
+      setScore(value, animateDelta = false) {
+        const delta = value - score;
+        score = value;
+        scoreVal.textContent = String(score);
+        scoreChip.classList.toggle('glowing', score > startBest && score > 0);
+        applyTheme(Math.floor(score / THEME_SWITCH_POINTS));
+        if (score > best) {
+          best = score;
+          Store.set(bestKey, best);
+          bestVal.textContent = String(best);
+        }
+        if (animateDelta && delta > 0) {
+          const pop = el('span', 'float-score', bestChip.previousElementSibling);
+          pop.textContent = '+' + delta;
+          setTimeout(() => pop.remove(), 820);
+        }
+      },
+      gameOver(opts) {
+        Overlay.show(Object.assign({
+          eyebrow: this.currentTitle || '玩完喇',
+          score,
+          best,
+          newBest: score >= best && score > 0
+        }, opts));
+      }
+    };
+  },
+
+  renderMenu() {
+    const grid = $('#cardGrid');
+    grid.innerHTML = '';
+    for (const [id, def] of Object.entries(this.registry)) {
+      const card = el('article', 'card', grid);
+      const glyph = el('div', 'glyph', card);
+      glyph.innerHTML = def.icon;
+      const h = el('h3', '', card);
+      h.textContent = def.title;
+      const p = el('p', '', card);
+      p.textContent = def.desc;
+      const meta = el('div', 'card-meta', card);
+      meta.textContent = '最高分 · ' + Store.get('mp-best-' + id, 0);
+      const btn = el('button', 'play-btn', card);
+      btn.textContent = '玩';
+      btn.addEventListener('click', () => this.navigate(id));
+    }
+  }
+};
+
+/* ============================================================
+   Game 1: Block Blast
+   ============================================================ */
+/* === CUSTOMIZE: BLOCK SHAPES & WEIGHTS ===
+   cells: [row, col] offsets of each block in the piece.
+   w: relative draw frequency (1 = normal, 1.1 = boosted, 0.9 = reduced). */
+const BB_SHAPES = [
+  /* Small pieces (rare; the <=3-cell ones double as guaranteed-solvable rescue pieces) */
+  { cells: [[0, 0]], w: 0.4 },
+  { cells: [[0, 0], [0, 1]], w: 0.6 },
+  { cells: [[0, 0], [1, 0]], w: 0.6 },
+  { cells: [[0, 0], [0, 1], [0, 2]], w: 0.7 },
+  { cells: [[0, 0], [1, 0], [2, 0]], w: 0.7 },
+  { cells: [[0, 0], [0, 1], [1, 0]], w: 0.6 },
+  { cells: [[0, 0], [0, 1], [1, 1]], w: 0.6 },
+  { cells: [[0, 0], [1, 0], [1, 1]], w: 0.6 },
+  { cells: [[0, 1], [1, 0], [1, 1]], w: 0.6 },
+  /* Tetrominoes */
+  { cells: [[0, 0], [0, 1], [0, 2], [0, 3]], w: 0.6 },
+  { cells: [[0, 0], [1, 0], [2, 0], [3, 0]], w: 0.6 },
+  { cells: [[0, 0], [0, 1], [1, 0], [1, 1]], w: 1.5 },
+  { cells: [[0, 0], [0, 1], [0, 2], [1, 1]], w: 0.5 },
+  { cells: [[0, 1], [1, 0], [1, 1], [1, 2]], w: 0.5 },
+  { cells: [[0, 0], [1, 0], [2, 0], [2, 1]], w: 0.5 },
+  { cells: [[0, 0], [0, 1], [1, 1], [2, 1]], w: 0.5 },
+  { cells: [[0, 1], [0, 2], [1, 0], [1, 1]], w: 0.5 },
+  { cells: [[0, 0], [0, 1], [1, 1], [1, 2]], w: 0.5 },
+  /* Big pieces (boosted). Combined per shape family:
+     3x3 square 1.7 (#1) > 2x3 rectangle 1.6 (#2) > 2x2 square 1.5 (#3)
+     > 5x1 line 1.3 > 3x3 L 1.2 > 4x1 line 1.2 */
+  { cells: [[0, 0], [0, 1], [0, 2], [0, 3], [0, 4]], w: 0.65 },
+  { cells: [[0, 0], [1, 0], [2, 0], [3, 0], [4, 0]], w: 0.65 },
+  { cells: [[0, 0], [0, 1], [0, 2], [1, 0], [2, 0]], w: 0.6 },
+  { cells: [[0, 0], [0, 1], [0, 2], [1, 2], [2, 2]], w: 0.6 },
+  { cells: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2]], w: 0.8 },
+  { cells: [[0, 0], [0, 1], [1, 0], [1, 1], [2, 0], [2, 1]], w: 0.8 },
+  { cells: [[0, 0], [0, 1], [0, 2], [1, 0], [1, 1], [1, 2], [2, 0], [2, 1], [2, 2]], w: 1.7 }
+];
+
+/* NOTE: block colors are now per-theme. Search "CUSTOMIZE: THEME COLORS"
+   and edit the blocks: [...] pool inside each theme. */
+
+/* === CUSTOMIZE: BOARD SIZE (also update the two 8s in the .bb-board CSS rule) === */
+const BB_BOARD_SIZE = 8;
+
+/* === CUSTOMIZE: STARTING BOARD (pre-filled blobs like classic Block Blast) ===
+   enabled: turn the pre-fill off/on. minCells/maxCells: how much of the
+   board starts filled. maxColors: blobs are painted in 1..maxColors theme colors. */
+const START_FILL = { enabled: true, minCells: 16, maxCells: 28, maxColors: 2 };
+
+/* === CUSTOMIZE: FULL-CLEAR EVENT ===
+   Every minSets..maxSets piece sets, the game plans a 6-12 piece sequence
+   (re-planned from the live board every set) that fills the holes of the
+   occupied lines with big pieces and clears the entire board over the next
+   2-4 sets. The window lasts buildUpSets + armedWindow sets; if the board
+   still is not empty by then, the event reschedules. Wipe sets contain at
+   most one 1x1, never in consecutive sets. */
+const CLEAR_EVENT = { minSets: 15, maxSets: 30, buildUpSets: 2, armedWindow: 8 };
+
+/* === CUSTOMIZE: BOMB MODE (炸彈方塊 only) ===
+   chancePerSet: probability a set contains a bomb piece.
+   fuseRounds: sets (batches) allowed before the bomb explodes.
+   maxActive: bombs allowed on the board at once. */
+const BOMB = { chancePerSet: 0.35, fuseRounds: 7, maxActive: 2 };
+
+/* === CUSTOMIZE: DRAG FEEL ===
+   liftTouch / liftMouse: px the piece floats above the pointer.
+   ghostStartScale: size the piece starts at when picked up (1 = full size). */
+const BB_DRAG = { liftTouch: 76, liftMouse: 20, ghostStartScale: 0.42 };
+
+function weightedShape() {
+  const total = BB_SHAPES.reduce((sum, s) => sum + s.w, 0);
+  let roll = Math.random() * total;
+  for (const s of BB_SHAPES) {
+    roll -= s.w;
+    if (roll <= 0) return s.cells;
+  }
+  return BB_SHAPES[BB_SHAPES.length - 1].cells;
+}
+
+function hexToRgba(hex, alpha) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+class BlockBlast {
+  constructor(root, hud) {
+    this.root = root;
+    this.hud = hud;
+    this.S = BB_BOARD_SIZE;
+    this.board = Array.from({ length: this.S }, () => Array(this.S).fill(null));
+    this.score = 0;
+    this.streak = 0;
+    this.batch = [];
+    this.setCount = 0;
+    this.nextEventAt = CLEAR_EVENT.minSets + randInt(CLEAR_EVENT.maxSets - CLEAR_EVENT.minSets + 1);
+    this.eventArmedFor = 0;
+    this.lastSetHadSingle = false;
+    this.gameId = 'block-blast';
+    if (START_FILL.enabled) this.seedBoard();
+    this.locked = false;
+    this.drag = null;
+    this.previewCells = [];
+    this.clearingCells = new Map();
+    this.clearToken = 0;
+    this.timers = [];
+    this.build();
+    this.newBatch();
+    this.render();
+  }
+
+  build() {
+    const stage = el('div', 'game-stage', this.root);
+    const stats = el('div', 'substats', stage);
+    this.streakChip = this.makeChip(stats, '連續', '0');
+    this.boardEl = el('div', 'bb-board', stage);
+    this.boardEl.style.gridTemplateColumns = `repeat(${this.S}, var(--bb-cell))`;
+    this.cells = [];
+    for (let r = 0; r < this.S; r++) {
+      for (let c = 0; c < this.S; c++) {
+        this.cells.push(el('div', 'bb-cell', this.boardEl));
+      }
+    }
+    this.trayEl = el('div', 'bb-tray', stage);
+    const hint = el('div', 'hint', stage);
+    hint.textContent = '將積木拖上棋盤。填滿一行或者一列就會消失。';
+
+    this.onTrayDown = (e) => this.pointerDown(e);
+    this.trayEl.addEventListener('pointerdown', this.onTrayDown);
+    this.onMove = (e) => this.pointerMove(e);
+    this.onUp = (e) => this.pointerUp(e);
+    window.addEventListener('pointermove', this.onMove, { passive: false });
+    window.addEventListener('pointerup', this.onUp);
+    window.addEventListener('pointercancel', this.onUp);
+  }
+
+  makeChip(parent, label, value) {
+    const chip = el('div', 'chip', parent);
+    const l = el('span', 'label', chip);
+    l.textContent = label;
+    const v = el('span', 'value', chip);
+    v.textContent = value;
+    return v;
+  }
+
+  onCellsCleared(targets) { /* hook for subclasses (bomb defusing) */ }
+
+  decorateGhost(ghost, piece, cols) { /* hook for subclasses (bomb badge) */ }
+
+  /* === CUSTOMIZE: DIFFICULTY (score thresholds for batch generation) ===
+     Solutions are counted clear-aware (place, clear lines, place next),
+     so piece order matters. Difficulty 10 targets exactly ONE ordered
+     solution. Every batch is guaranteed solvable when dealt. */
+  difficulty() {
+    if (this.score < 1000) return 1 + Math.floor(this.score / 350);
+    if (this.score < 3000) return 4 + Math.floor((this.score - 1000) / 350);
+    return 10;
+  }
+
+  canPlace(board, shape, r, c) {
+    for (const [dr, dc] of shape) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || cc < 0 || rr >= this.S || cc >= this.S || board[rr][cc]) return false;
+    }
+    return true;
+  }
+
+  placements(board, shape) {
+    const list = [];
+    for (let r = 0; r < this.S; r++) {
+      for (let c = 0; c < this.S; c++) {
+        if (this.canPlace(board, shape, r, c)) list.push([r, c]);
+      }
+    }
+    return list;
+  }
+
+  applyShape(board, shape, r, c) {
+    const nb = board.map(row => row.slice());
+    for (const [dr, dc] of shape) nb[r + dr][c + dc] = 1;
+    return nb;
+  }
+
+  resolveBoard(board) {
+    const fullRows = [];
+    const fullCols = [];
+    for (let i = 0; i < this.S; i++) {
+      if (board[i].every(v => v)) fullRows.push(i);
+      if (board.every(row => row[i])) fullCols.push(i);
+    }
+    if (!fullRows.length && !fullCols.length) return board;
+    for (const r of fullRows) for (let c = 0; c < this.S; c++) board[r][c] = null;
+    for (const c of fullCols) for (let r = 0; r < this.S; r++) board[r][c] = null;
+    return board;
+  }
+
+  /* Counts ordered solutions: place a piece, clear any completed lines,
+     then place the next. Order matters because clears open new space.
+     Identical shapes are deduplicated so swapping two copies of the same
+     piece does not count as a different solution. Capped by cap and by a
+     node budget (budget exhaustion reports cap, i.e. "at least cap"). */
+  countSolutions(board, shapes, cap) {
+    let count = 0;
+    let nodes = 0;
+    const budget = 20000;
+    const used = new Array(shapes.length).fill(false);
+    const rec = (b, remaining) => {
+      if (count >= cap || nodes > budget) return;
+      if (remaining === 0) { count++; return; }
+      for (let i = 0; i < shapes.length; i++) {
+        if (used[i]) continue;
+        let dup = false;
+        for (let j = 0; j < i; j++) {
+          if (!used[j] && shapes[j] === shapes[i]) { dup = true; break; }
+        }
+        if (dup) continue;
+        const ps = this.placements(b, shapes[i]);
+        used[i] = true;
+        for (const [r, c] of ps) {
+          nodes++;
+          if (nodes > budget) { count = cap; used[i] = false; return; }
+          rec(this.resolveBoard(this.applyShape(b, shapes[i], r, c)), remaining - 1);
+          if (count >= cap) { used[i] = false; return; }
+        }
+        used[i] = false;
+      }
+    };
+    rec(board, shapes.length);
+    return count;
+  }
+
+  /* Grows organic blobs of blocks, classic Block Blast style. Caps each
+     row/column at S-2 filled cells so the board never starts with a full
+     or nearly-unavoidable line. */
+  seedBoard() {
+    const target = START_FILL.minCells + randInt(START_FILL.maxCells - START_FILL.minCells + 1);
+    const pool = shuffle(themeBlockPool()).slice(0, 1 + randInt(START_FILL.maxColors));
+    const rowCount = Array(this.S).fill(0);
+    const colCount = Array(this.S).fill(0);
+    let placed = 0;
+    let guard = 0;
+    while (placed < target && guard++ < 200) {
+      const empty = [];
+      for (let r = 0; r < this.S; r++) {
+        for (let c = 0; c < this.S; c++) {
+          if (!this.board[r][c] && rowCount[r] < this.S - 2 && colCount[c] < this.S - 2) empty.push(r * this.S + c);
+        }
+      }
+      if (!empty.length) break;
+      let cur = pick(empty);
+      const color = pick(pool);
+      const blobLen = 3 + randInt(6);
+      for (let i = 0; i < blobLen && placed < target; i++) {
+        const r = Math.floor(cur / this.S), c = cur % this.S;
+        if (this.board[r][c] || rowCount[r] >= this.S - 2 || colCount[c] >= this.S - 2) break;
+        this.board[r][c] = color;
+        rowCount[r]++;
+        colCount[c]++;
+        placed++;
+        const nexts = [];
+        if (r > 0 && !this.board[r - 1][c]) nexts.push(cur - this.S);
+        if (r < this.S - 1 && !this.board[r + 1][c]) nexts.push(cur + this.S);
+        if (c > 0 && !this.board[r][c - 1]) nexts.push(cur - 1);
+        if (c < this.S - 1 && !this.board[r][c + 1]) nexts.push(cur + 1);
+        if (!nexts.length) break;
+        cur = pick(nexts);
+      }
+    }
+  }
+
+  /* Shape preference for the wipe planner: big and chunky first
+     (3x3, then 2x3 rectangles, lines, big Ls, tetrominoes), 1x1 dead last. */
+  shapePreference() {
+    if (this.prefShapes) return this.prefShapes;
+    const dims = (s) => [Math.max(...s.map(p => p[0])) + 1, Math.max(...s.map(p => p[1])) + 1];
+    const score = (s) => {
+      const [r, c] = dims(s);
+      const rect = r * c === s.length;
+      return s.length * 10 + (rect ? 5 : 0) + Math.min(r, c);
+    };
+    this.prefShapes = BB_SHAPES.map(e => e.cells).sort((a, b) => score(b) - score(a));
+    return this.prefShapes;
+  }
+
+  /* Empty cells of every occupied line, taking rows or columns,
+     whichever needs fewer cells filled. */
+  wipeHoles(board) {
+    const rowHoles = new Set();
+    const colHoles = new Set();
+    for (let i = 0; i < this.S; i++) {
+      if (board[i].some(v => v)) {
+        for (let c = 0; c < this.S; c++) if (!board[i][c]) rowHoles.add(i * this.S + c);
+      }
+      if (board.some(row => row[i])) {
+        for (let r = 0; r < this.S; r++) if (!board[r][i]) colHoles.add(r * this.S + i);
+      }
+    }
+    if (!rowHoles.size && !colHoles.size) return null;
+    if (!rowHoles.size) return colHoles;
+    if (!colHoles.size) return rowHoles;
+    return rowHoles.size <= colHoles.size ? rowHoles : colHoles;
+  }
+
+  /* Greedily tiles the hole set with the biggest shapes that fit entirely
+     inside it. A 1x1 is used only when nothing else covers a hole. */
+  greedyCover(holes, maxPieces) {
+    const pref = this.shapePreference();
+    const covered = new Set();
+    const result = [];
+    const anchors = [...holes].sort((a, b) => a - b);
+    for (const anchor of anchors) {
+      if (result.length >= maxPieces) break;
+      if (covered.has(anchor)) continue;
+      const ar = Math.floor(anchor / this.S), ac = anchor % this.S;
+      let placedShape = null;
+      let placedAt = null;
+      outer:
+      for (const shape of pref) {
+        for (const [adr, adc] of shape) {
+          const r0 = ar - adr, c0 = ac - adc;
+          let fits = true;
+          for (const [dr, dc] of shape) {
+            const rr = r0 + dr, cc = c0 + dc;
+            if (rr < 0 || cc < 0 || rr >= this.S || cc >= this.S) { fits = false; break; }
+            const idx = rr * this.S + cc;
+            if (!holes.has(idx) || covered.has(idx)) { fits = false; break; }
+          }
+          if (fits) { placedShape = shape; placedAt = [r0, c0]; break outer; }
+        }
+      }
+      if (!placedShape) continue;
+      for (const [dr, dc] of placedShape) covered.add((placedAt[0] + dr) * this.S + (placedAt[1] + dc));
+      result.push({ shape: placedShape, r: placedAt[0], c: placedAt[1] });
+    }
+    return result;
+  }
+
+  /* Plans a 6-12 piece sequence that clears the whole board: tile the
+     holes of the occupied lines with big pieces, simulate the placements
+     and the resulting line clears, then tile whatever residue survives,
+     up to four rounds. Returns the piece list plus whether the simulated
+     end state is an empty board. */
+  planWipeSequence() {
+    let sim = this.board.map(row => row.slice());
+    const pieces = [];
+    for (let round = 0; round < 4 && pieces.length < 12; round++) {
+      const holes = this.wipeHoles(sim);
+      if (!holes) break;
+      const cover = this.greedyCover(holes, 12 - pieces.length);
+      if (!cover.length) break;
+      for (const pl of cover) {
+        pieces.push(pl.shape);
+        sim = this.resolveBoard(this.applyShape(sim, pl.shape, pl.r, pl.c));
+      }
+    }
+    return { pieces, achievesWipe: sim.every(row => row.every(v => !v)) };
+  }
+
+  /* Weighted pick restricted to chunky (4+ cell) shapes, used to pad
+     short wipe sets instead of 1x1 filler. */
+  bigFillerShape() {
+    const bigs = BB_SHAPES.filter(s => s.cells.length >= 4);
+    const total = bigs.reduce((sum, s) => sum + s.w, 0);
+    let roll = Math.random() * total;
+    for (const s of bigs) { roll -= s.w; if (roll <= 0) return s.cells; }
+    return bigs[bigs.length - 1].cells;
+  }
+
+  /* Deals the next 3 pieces of the wipe plan (re-planned from the live
+     board every set). Hard caps: at most one 1x1 per set, and never a
+     1x1 in two consecutive sets. */
+  nextWipeSet() {
+    const plan = this.planWipeSequence();
+    if (!plan.pieces.length) return null;
+    const setShapes = [];
+    for (const shape of plan.pieces) {
+      if (setShapes.length === 3) break;
+      if (shape.length === 1) {
+        const singlesInSet = setShapes.filter(s => s.length === 1).length;
+        if (singlesInSet >= 1 || this.lastSetHadSingle) continue;
+      }
+      setShapes.push(shape);
+    }
+    while (setShapes.length < 3) setShapes.push(this.bigFillerShape());
+    this.lastSetHadSingle = setShapes.some(s => s.length === 1);
+    return setShapes;
+  }
+
+  /* Every dealt batch is guaranteed to have at least one clear-aware
+     solution from the board state at deal time. At difficulty 10 the
+     generator hunts for batches with EXACTLY one ordered solution
+     (order matters because of line clears); if none is found within the
+     attempt budget it takes the solvable batch closest to one solution. */
+  newBatch() {
+    this.setCount++;
+    if (this.setCount >= this.nextEventAt - CLEAR_EVENT.buildUpSets) {
+      const reschedule = () => {
+        this.eventArmedFor = 0;
+        this.nextEventAt = this.setCount + CLEAR_EVENT.minSets + randInt(CLEAR_EVENT.maxSets - CLEAR_EVENT.minSets + 1);
+      };
+      if (this.board.every(row => row.every(v => !v))) {
+        /* The arc paid off: the board is empty. Schedule the next one. */
+        reschedule();
+      } else {
+        this.eventArmedFor++;
+        if (this.eventArmedFor > CLEAR_EVENT.buildUpSets + CLEAR_EVENT.armedWindow) {
+          reschedule();
+        } else {
+          const setShapes = this.nextWipeSet();
+          if (setShapes && this.countSolutions(this.board, setShapes, 1) >= 1) {
+            this.batch = setShapes.map(shape => ({ shape, color: pick(themeBlockPool()), used: false }));
+            this.batchSnapshot = this.board.map(row => row.slice());
+            return;
+          }
+        }
+      }
+    }
+    const diff = this.difficulty();
+    const targetMin = diff <= 3 ? 3 : 1;
+    const targetMax = diff >= 10 ? 1 : diff <= 3 ? Infinity : Math.max(1, Math.round(12 - diff));
+    const cap = diff >= 10 ? 2 : diff <= 3 ? 4 : targetMax + 1;
+    let bestBatch = null;
+    let bestDist = Infinity;
+    for (let attempt = 0; attempt < 36; attempt++) {
+      const shapes = [weightedShape(), weightedShape(), weightedShape()];
+      const count = this.countSolutions(this.board, shapes, cap);
+      if (count === 0) continue;
+      if (count >= targetMin && count <= targetMax) { bestBatch = shapes; bestDist = 0; break; }
+      const dist = count < targetMin ? targetMin - count : count - (targetMax === Infinity ? count : targetMax);
+      if (bestBatch === null || dist < bestDist) { bestBatch = shapes; bestDist = dist; }
+    }
+    if (!bestBatch) {
+      const smalls = BB_SHAPES.filter(s => s.cells.length <= 3);
+      for (let attempt = 0; attempt < 40 && !bestBatch; attempt++) {
+        const shapes = [pick(smalls).cells, pick(smalls).cells, pick(smalls).cells];
+        if (this.countSolutions(this.board, shapes, 1) >= 1) bestBatch = shapes;
+      }
+    }
+    if (!bestBatch) {
+      const single = BB_SHAPES[0].cells;
+      bestBatch = [single, single, single];
+    }
+    this.batch = bestBatch.map(shape => ({ shape, color: pick(themeBlockPool()), used: false }));
+    this.batchSnapshot = this.board.map(row => row.slice());
+  }
+
+  render() {
+    for (let r = 0; r < this.S; r++) {
+      for (let c = 0; c < this.S; c++) {
+        const idx = r * this.S + c;
+        if (this.clearingCells.has(idx)) continue;
+        const cell = this.cells[idx];
+        const val = this.board[r][c];
+        cell.className = 'bb-cell' + (val ? ' filled' : '');
+        cell.style.background = val ? val : '';
+      }
+    }
+    this.renderTray();
+  }
+
+  syncCell(idx) {
+    const val = this.board[Math.floor(idx / this.S)][idx % this.S];
+    const cell = this.cells[idx];
+    cell.style.transitionDelay = '';
+    cell.className = 'bb-cell' + (val ? ' filled' : '');
+    cell.style.background = val || '';
+  }
+
+  flushClears() {
+    for (const idx of [...this.clearingCells.keys()]) {
+      this.clearingCells.delete(idx);
+      this.syncCell(idx);
+    }
+  }
+
+  renderTray() {
+    this.trayEl.innerHTML = '';
+    this.pieceEls = [];
+    this.batch.forEach((piece, index) => {
+      const wrap = el('div', 'bb-piece', this.trayEl);
+      if (piece.used) wrap.classList.add('used');
+      else if (this.placements(this.board, piece.shape).length === 0) wrap.classList.add('dead');
+      const rows = Math.max(...piece.shape.map(p => p[0])) + 1;
+      const cols = Math.max(...piece.shape.map(p => p[1])) + 1;
+      wrap.style.gridTemplateColumns = `repeat(${cols}, 20px)`;
+      const occupied = new Set(piece.shape.map(([r, c]) => r * cols + c));
+      for (let i = 0; i < rows * cols; i++) {
+        const mini = el('div', 'bb-mini' + (occupied.has(i) ? '' : ' empty'), wrap);
+        if (occupied.has(i)) mini.style.background = piece.color;
+      }
+      this.pieceEls[index] = wrap;
+    });
+  }
+
+  nearestPiece(e) {
+    let best = -1;
+    let bestDist = Infinity;
+    this.batch.forEach((piece, index) => {
+      if (piece.used) return;
+      const wrap = this.pieceEls[index];
+      if (!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dist = (e.clientX - cx) ** 2 + (e.clientY - cy) ** 2;
+      if (dist < bestDist) { bestDist = dist; best = index; }
+    });
+    return best;
+  }
+
+  pointerDown(e) {
+    if (this.locked || this.drag) return;
+    const index = this.nearestPiece(e);
+    if (index === -1) return;
+    e.preventDefault();
+    const piece = this.batch[index];
+    const cellSize = this.cells[0].getBoundingClientRect().width;
+    const cols = Math.max(...piece.shape.map(p => p[1])) + 1;
+    const rows = Math.max(...piece.shape.map(p => p[0])) + 1;
+
+    const ghost = el('div', 'bb-ghost', document.body);
+    ghost.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+    ghost.style.setProperty('--bb-cell', cellSize + 'px');
+    const occupied = new Set(piece.shape.map(([r, c]) => r * cols + c));
+    for (let i = 0; i < rows * cols; i++) {
+      const mini = el('div', 'bb-mini' + (occupied.has(i) ? '' : ' empty'), ghost);
+      if (occupied.has(i)) mini.style.background = piece.color;
+    }
+    this.decorateGhost(ghost, piece, cols);
+    ghost.style.transform = `scale(${BB_DRAG.ghostStartScale})`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => { ghost.style.transform = 'scale(1)'; });
+    });
+
+    this.drag = { index, piece, ghost, cellSize, cols, rows, valid: null };
+    this.pieceEls[index].classList.add('used');
+    this.positionGhost(e);
+    this.updatePreview();
+  }
+
+  positionGhost(e) {
+    const d = this.drag;
+    const gw = d.cols * d.cellSize + (d.cols - 1) * 3;
+    const gh = d.rows * d.cellSize + (d.rows - 1) * 3;
+    const lift = e.pointerType === 'touch' ? BB_DRAG.liftTouch : BB_DRAG.liftMouse;
+    d.ghost.style.left = (e.clientX - gw / 2) + 'px';
+    d.ghost.style.top = (e.clientY - gh - lift) + 'px';
+    d.anchorX = e.clientX - gw / 2 + d.cellSize / 2;
+    d.anchorY = e.clientY - gh - lift + d.cellSize / 2;
+  }
+
+  pointerMove(e) {
+    if (!this.drag) return;
+    e.preventDefault();
+    this.positionGhost(e);
+    this.updatePreview();
+  }
+
+  updatePreview() {
+    const d = this.drag;
+    const rect = this.boardEl.getBoundingClientRect();
+    const pad = 11;
+    const step = d.cellSize + 3;
+    const c = Math.round((d.anchorX - rect.left - pad - d.cellSize / 2) / step);
+    const r = Math.round((d.anchorY - rect.top - pad - d.cellSize / 2) / step);
+    this.clearPreview();
+    d.valid = null;
+    if (r < 0 || c < 0 || r >= this.S || c >= this.S) return;
+    if (!this.canPlace(this.board, d.piece.shape, r, c)) return;
+    d.valid = [r, c];
+    for (const [dr, dc] of d.piece.shape) {
+      const idx = (r + dr) * this.S + (c + dc);
+      if (this.clearingCells.has(idx)) continue;
+      const cell = this.cells[idx];
+      cell.classList.add('preview-ghost');
+      cell.style.background = hexToRgba(d.piece.color, 0.38);
+      this.previewCells.push(idx);
+    }
+    this.highlightLines(r, c);
+  }
+
+  highlightLines(r, c) {
+    const test = this.applyShape(this.board, this.drag.piece.shape, r, c);
+    for (let i = 0; i < this.S; i++) {
+      if (test[i].every(v => v)) {
+        for (let j = 0; j < this.S; j++) this.cells[i * this.S + j].classList.add('line-hot');
+      }
+      if (test.every(row => row[i])) {
+        for (let j = 0; j < this.S; j++) this.cells[j * this.S + i].classList.add('line-hot');
+      }
+    }
+  }
+
+  clearPreview() {
+    for (const idx of this.previewCells) {
+      const cell = this.cells[idx];
+      cell.classList.remove('preview-ghost');
+      const r = Math.floor(idx / this.S), c = idx % this.S;
+      cell.style.background = this.board[r][c] || '';
+    }
+    this.previewCells = [];
+    for (const cell of this.cells) cell.classList.remove('line-hot');
+  }
+
+  pointerUp() {
+    if (!this.drag) return;
+    const d = this.drag;
+    this.drag = null;
+    d.ghost.remove();
+    this.clearPreview();
+    if (d.valid) {
+      this.place(d.piece, d.index, d.valid[0], d.valid[1]);
+    } else {
+      this.renderTray();
+    }
+  }
+
+  onThemeChange() {
+    const pool = shuffle(themeBlockPool());
+    const mapping = new Map();
+    let next = 0;
+    const remap = (color) => {
+      if (!mapping.has(color)) {
+        mapping.set(color, pool[next % pool.length]);
+        next++;
+      }
+      return mapping.get(color);
+    };
+    for (let r = 0; r < this.S; r++) {
+      for (let c = 0; c < this.S; c++) {
+        if (this.board[r][c]) this.board[r][c] = remap(this.board[r][c]);
+      }
+    }
+    for (const piece of this.batch) piece.color = remap(piece.color);
+    if (!this.drag) this.render();
+  }
+
+  spawnCombo(streak) {
+    const pop = el('div', 'combo-pop', this.boardEl);
+    pop.textContent = COMBO.format(streak);
+    pop.style.top = (12 + randInt(40)) + '%';
+    setTimeout(() => pop.remove(), 1150);
+  }
+
+  boardClearFx() {
+    SFX.play(SOUNDS.boardClear);
+    const wrap = el('div', 'bc-fx', document.body);
+    const text = el('span', '', wrap);
+    text.textContent = BOARD_CLEAR_TEXT;
+    setTimeout(() => wrap.remove(), 1400);
+  }
+
+  place(piece, index, r, c) {
+    piece.used = true;
+    SFX.play(SOUNDS.place);
+    for (const [dr, dc] of piece.shape) {
+      const idx = (r + dr) * this.S + (c + dc);
+      const cell = this.cells[idx];
+      if (this.clearingCells.has(idx)) {
+        this.clearingCells.delete(idx);
+        cell.style.transitionDelay = '';
+        cell.classList.remove('clearing');
+      }
+      this.board[r + dr][c + dc] = piece.color;
+      cell.classList.add('filled', 'pop');
+      cell.style.background = piece.color;
+      setTimeout(() => cell.classList.remove('pop'), 340);
+    }
+    this.score += piece.shape.length;
+    this.hud.setScore(this.score);
+    this.resolveLines(() => {
+      if (this.batch.every(p => p.used)) this.newBatch();
+      this.render();
+      this.checkGameOver();
+    });
+  }
+
+  resolveLines(done) {
+    const fullRows = [];
+    const fullCols = [];
+    for (let i = 0; i < this.S; i++) {
+      if (this.board[i].every(v => v)) fullRows.push(i);
+      if (this.board.every(row => row[i])) fullCols.push(i);
+    }
+    const lineCount = fullRows.length + fullCols.length;
+    if (lineCount === 0) {
+      this.streak = 0;
+      this.streakChip.textContent = '0';
+      done();
+      return;
+    }
+    this.streak++;
+    SFX.play(SOUNDS.clear);
+    if (this.streak >= COMBO.minStreak) this.spawnCombo(this.streak);
+    /* === CUSTOMIZE: SCORING (line clear formula + streak bonus) === */
+    const gained = lineCount * 100 * lineCount + this.streak * 50;
+    const targets = new Set();
+    fullRows.forEach(r => { for (let c = 0; c < this.S; c++) targets.add(r * this.S + c); });
+    fullCols.forEach(c => { for (let r = 0; r < this.S; r++) targets.add(r * this.S + c); });
+
+    /* Board state, score, and streak update immediately so the player can
+       keep placing pieces; the fade-out below is purely cosmetic. */
+    const token = ++this.clearToken;
+    let order = 0;
+    for (const idx of targets) {
+      this.board[Math.floor(idx / this.S)][idx % this.S] = null;
+      this.clearingCells.set(idx, token);
+      const cell = this.cells[idx];
+      cell.style.transitionDelay = (order % this.S) * 26 + 'ms';
+      cell.classList.add('clearing');
+      order++;
+    }
+    this.score += gained;
+    this.hud.setScore(this.score, true);
+    this.streakChip.textContent = String(this.streak);
+    this.onCellsCleared(targets);
+    if (this.board.every(row => row.every(v => !v))) this.boardClearFx();
+
+    this.timers.push(setTimeout(() => {
+      for (const idx of targets) {
+        if (this.clearingCells.get(idx) !== token) continue;
+        this.clearingCells.delete(idx);
+        this.syncCell(idx);
+      }
+    }, 520));
+
+    done();
+  }
+
+  checkGameOver() {
+    const alive = this.batch.some(p => !p.used && this.placements(this.board, p.shape).length > 0);
+    if (!alive) this.gameOverSequence();
+  }
+
+  /* === CUSTOMIZE: GAME OVER ANIMATION (flood timing) ===
+     stepMs: delay between diagonals of the wave. hold: pause at full flood.
+     The wave floods the board corner to corner in theme colors, recedes in
+     the same direction, then the losing popup expands in. */
+  /* Diagonal wave: floods the board corner to corner in theme colors,
+     recedes the same direction, then calls onDone. Purely cosmetic. */
+  floodWave(onDone) {
+    this.flushClears();
+    this.clearPreview();
+    const diagonals = 2 * this.S - 1;
+    const stepMs = 45;
+    const hold = 350;
+    const floodDone = (diagonals - 1) * stepMs + 250;
+    for (let d = 0; d < diagonals; d++) {
+      this.timers.push(setTimeout(() => {
+        for (let r = 0; r < this.S; r++) {
+          const c = d - r;
+          if (c < 0 || c >= this.S) continue;
+          const cell = this.cells[r * this.S + c];
+          cell.classList.add('flood-cell');
+          cell.style.background = pick(themeBlockPool());
+        }
+      }, d * stepMs));
+      this.timers.push(setTimeout(() => {
+        for (let r = 0; r < this.S; r++) {
+          const c = d - r;
+          if (c < 0 || c >= this.S) continue;
+          this.cells[r * this.S + c].classList.remove('flood-cell');
+          this.syncCell(r * this.S + c);
+        }
+      }, floodDone + hold + d * stepMs));
+    }
+    this.timers.push(setTimeout(onDone, floodDone + hold + (diagonals - 1) * stepMs + 450));
+  }
+
+  /* === CUSTOMIZE: GAME OVER ANIMATION (see floodWave for wave timing) === */
+  gameOverSequence() {
+    if (this.ending) return;
+    this.ending = true;
+    this.locked = true;
+    const solution = this.findSolution(this.batchSnapshot, this.batch);
+    this.floodWave(() => {
+      this.hud.gameOver({
+        eyebrow: '砌方塊',
+        title: '冇位放喇',
+        extra: solution
+          ? `最高連住 ×${this.streak || 0} · 呢副積木其實仲有得放`
+          : `最高連住 ×${this.streak || 0} · 呢副積木真係冇得放`,
+        primaryLabel: '再玩一次',
+        onPrimary: () => App.navigate(this.gameId),
+        secondaryLabel: solution ? '睇下有咩解法' : null,
+        onSecondary: solution ? () => this.showSolution(solution) : null
+      });
+    });
+  }
+
+  findSolution(board, piecesIn) {
+    const pieces = piecesIn.map((piece, i) => ({ shape: piece.shape, color: piece.color, i }));
+    let nodes = 0;
+    const budget = 150000;
+    const used = new Array(pieces.length).fill(false);
+    const steps = [];
+    const rec = (b, remaining) => {
+      if (remaining === 0) return true;
+      if (nodes > budget) return false;
+      for (let i = 0; i < pieces.length; i++) {
+        if (used[i]) continue;
+        let dup = false;
+        for (let j = 0; j < i; j++) {
+          if (!used[j] && pieces[j].shape === pieces[i].shape) { dup = true; break; }
+        }
+        if (dup) continue;
+        const ps = this.placements(b, pieces[i].shape);
+        used[i] = true;
+        for (const [r, c] of ps) {
+          nodes++;
+          if (nodes > budget) { used[i] = false; return false; }
+          steps.push({ piece: pieces[i], r, c });
+          if (rec(this.resolveBoard(this.applyShape(b, pieces[i].shape, r, c)), remaining - 1)) return true;
+          steps.pop();
+        }
+        used[i] = false;
+      }
+      return false;
+    };
+    return rec(board.map(row => row.slice()), pieces.length) ? steps : null;
+  }
+
+  /* Pre-simulates the solution into place/clear frames so the replay
+     shows the exact sequence, line clears included. */
+  buildReplayTimeline(steps) {
+    const sim = this.batchSnapshot.map(row => row.slice());
+    const frames = [];
+    for (const step of steps) {
+      const placed = [];
+      for (const [dr, dc] of step.piece.shape) {
+        sim[step.r + dr][step.c + dc] = step.piece.color;
+        placed.push((step.r + dr) * this.S + (step.c + dc));
+      }
+      frames.push({ type: 'place', cells: placed, color: step.piece.color, pieceIndex: step.piece.i });
+      const fullRows = [];
+      const fullCols = [];
+      for (let i = 0; i < this.S; i++) {
+        if (sim[i].every(v => v)) fullRows.push(i);
+        if (sim.every(row => row[i])) fullCols.push(i);
+      }
+      if (fullRows.length || fullCols.length) {
+        const targets = new Set();
+        fullRows.forEach(r => { for (let c = 0; c < this.S; c++) targets.add(r * this.S + c); });
+        fullCols.forEach(c => { for (let r = 0; r < this.S; r++) targets.add(r * this.S + c); });
+        for (const idx of targets) sim[Math.floor(idx / this.S)][idx % this.S] = null;
+        frames.push({ type: 'clear', cells: [...targets] });
+      }
+    }
+    return frames;
+  }
+
+  showSolution(steps) {
+    if (this.replaying) return;
+    this.replaying = true;
+    this.locked = true;
+    this.ending = false;
+    Overlay.hide();
+    this.clearPreview();
+    this.flushClears();
+    this.board = this.batchSnapshot.map(row => row.slice());
+    this.batch.forEach(piece => { piece.used = false; });
+    this.render();
+    const frames = this.buildReplayTimeline(steps);
+    this.timers = this.timers || [];
+    let t = 500;
+    for (const frame of frames) {
+      if (frame.type === 'place') {
+        this.timers.push(setTimeout(() => {
+          SFX.play(SOUNDS.place);
+          for (const idx of frame.cells) {
+            this.board[Math.floor(idx / this.S)][idx % this.S] = frame.color;
+            const cell = this.cells[idx];
+            cell.classList.add('filled', 'pop');
+            cell.style.background = frame.color;
+            setTimeout(() => cell.classList.remove('pop'), 340);
+          }
+          this.batch[frame.pieceIndex].used = true;
+          this.renderTray();
+        }, t));
+        t += 750;
+      } else {
+        this.timers.push(setTimeout(() => {
+          SFX.play(SOUNDS.clear);
+          let order = 0;
+          for (const idx of frame.cells) {
+            const cell = this.cells[idx];
+            cell.style.transitionDelay = (order % this.S) * 26 + 'ms';
+            cell.classList.add('clearing');
+            order++;
+          }
+          this.timers.push(setTimeout(() => {
+            for (const idx of frame.cells) {
+              this.board[Math.floor(idx / this.S)][idx % this.S] = null;
+              const cell = this.cells[idx];
+              cell.style.transitionDelay = '';
+              cell.classList.remove('clearing', 'filled');
+              cell.style.background = '';
+            }
+          }, 540));
+        }, t));
+        t += 900;
+      }
+    }
+    this.timers.push(setTimeout(() => {
+      Overlay.showPill();
+    }, t + 250));
+  }
+
+  destroy() {
+    if (this.timers) this.timers.forEach(clearTimeout);
+    this.trayEl.removeEventListener('pointerdown', this.onTrayDown);
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
+    window.removeEventListener('pointercancel', this.onUp);
+    if (this.drag) this.drag.ghost.remove();
+    this.root.innerHTML = '';
+  }
+}
+
+/* ============================================================
+   Game 1b: 炸彈方塊 (Block Blast with bomb blocks)
+   ============================================================ */
+class BombBlast extends BlockBlast {
+  constructor(root, hud) {
+    super(root, hud);
+    this.gameId = 'block-bomb';
+  }
+
+  ensureBombs() { if (!this.bombs) this.bombs = new Map(); return this.bombs; }
+
+  newBatch() {
+    super.newBatch();
+    this.tickBombs();
+    if (!this.ending) this.maybeAddBomb();
+  }
+
+  maybeAddBomb() {
+    const bombs = this.ensureBombs();
+    if (bombs.size >= BOMB.maxActive) return;
+    if (Math.random() > BOMB.chancePerSet) return;
+    const piece = pick(this.batch);
+    piece.bombCell = randInt(piece.shape.length);
+  }
+
+  place(piece, index, r, c) {
+    const bombK = piece.bombCell;
+    piece.bombCell = null;
+    super.place(piece, index, r, c);
+    if (bombK != null && !this.ending) {
+      const [dr, dc] = piece.shape[bombK];
+      const rr = r + dr, cc = c + dc;
+      if (this.board[rr][cc]) this.addBomb(rr * this.S + cc);
+    }
+  }
+
+  addBomb(idx) {
+    const bombs = this.ensureBombs();
+    const badge = el('div', 'bomb-badge', this.cells[idx]);
+    badge.textContent = String(BOMB.fuseRounds);
+    bombs.set(idx, { left: BOMB.fuseRounds, badge });
+  }
+
+  tickBombs() {
+    const bombs = this.ensureBombs();
+    let exploded = null;
+    for (const [idx, bomb] of bombs) {
+      bomb.left--;
+      bomb.badge.textContent = String(Math.max(0, bomb.left));
+      bomb.badge.classList.toggle('urgent', bomb.left <= 2);
+      if (bomb.left <= 0 && exploded === null) exploded = idx;
+    }
+    if (exploded !== null) this.explodeBomb(exploded);
+  }
+
+  onCellsCleared(targets) {
+    const bombs = this.ensureBombs();
+    for (const idx of targets) {
+      const bomb = bombs.get(idx);
+      if (bomb) {
+        bomb.badge.remove();
+        bombs.delete(idx);
+      }
+    }
+  }
+
+  renderTray() {
+    super.renderTray();
+    this.batch.forEach((piece, i) => {
+      if (piece.bombCell == null || piece.used) return;
+      const wrap = this.pieceEls[i];
+      if (!wrap) return;
+      const cols = Math.max(...piece.shape.map(p => p[1])) + 1;
+      const [br, bc] = piece.shape[piece.bombCell];
+      const mini = wrap.children[br * cols + bc];
+      if (mini) {
+        const badge = el('div', 'bomb-badge mini', mini);
+        badge.textContent = String(BOMB.fuseRounds);
+      }
+    });
+  }
+
+  decorateGhost(ghost, piece, cols) {
+    if (piece.bombCell == null) return;
+    const [br, bc] = piece.shape[piece.bombCell];
+    const mini = ghost.children[br * cols + bc];
+    if (mini) {
+      const badge = el('div', 'bomb-badge', mini);
+      badge.textContent = String(BOMB.fuseRounds);
+    }
+  }
+
+  explodeBomb(idx) {
+    if (this.ending) return;
+    this.ending = true;
+    this.locked = true;
+    SFX.play(SOUNDS.bomb);
+    const r = Math.floor(idx / this.S), c = idx % this.S;
+    const cell = this.cells[idx];
+    const wave = el('div', 'shockwave', this.boardEl);
+    wave.style.left = (cell.offsetLeft + cell.offsetWidth / 2) + 'px';
+    wave.style.top = (cell.offsetTop + cell.offsetHeight / 2) + 'px';
+    for (const [dr, dc] of [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]]) {
+      const rr = r + dr, cc = c + dc;
+      if (rr < 0 || cc < 0 || rr >= this.S || cc >= this.S) continue;
+      this.cells[rr * this.S + cc].classList.add('exploding');
+    }
+    this.timers.push(setTimeout(() => {
+      wave.remove();
+      this.hud.gameOver({
+        eyebrow: '炸彈方塊',
+        title: '炸彈爆咗！',
+        extra: `${BOMB.fuseRounds} 步之內冇消走藏住炸彈嗰格`,
+        primaryLabel: '再玩一次',
+        onPrimary: () => App.navigate(this.gameId)
+      });
+    }, 950));
+  }
+
+  showSolution(steps) {
+    const bombs = this.ensureBombs();
+    for (const bomb of bombs.values()) bomb.badge.remove();
+    bombs.clear();
+    super.showSolution(steps);
+  }
+}
+
+/* ============================================================
+   Game 2: Tile Merge (2048 variant)
+   ============================================================ */
+class TileMerge {
+  constructor(root, hud) {
+    this.root = root;
+    this.hud = hud;
+    this.size = 4;
+    this.tiles = new Map();
+    this.nextId = 1;
+    this.score = 0;
+    this.moving = false;
+    this.build();
+    this.spawn();
+    this.spawn();
+    this.paint();
+  }
+
+  build() {
+    const stage = el('div', 'game-stage', this.root);
+    const wrap = el('div', 'tm-wrap', stage);
+    this.boardEl = el('div', 'tm-board', wrap);
+    for (let i = 0; i < 16; i++) el('div', 'tm-slot', this.boardEl);
+    this.layer = el('div', '', wrap);
+    this.layer.style.position = 'absolute';
+    this.layer.style.inset = '0';
+    this.layer.style.pointerEvents = 'none';
+    const hint = el('div', 'hint', stage);
+    hint.textContent = '用箭嘴掣，或者用手指掃。一樣嘅數字撞埋會合埋。';
+
+    this.onKey = (e) => {
+      const map = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
+      if (map[e.key]) { e.preventDefault(); this.move(map[e.key][0], map[e.key][1]); }
+    };
+    window.addEventListener('keydown', this.onKey);
+
+    this.touchStart = null;
+    this.onDown = (e) => {
+      this.touchStart = [e.clientX, e.clientY];
+      try { this.boardEl.setPointerCapture(e.pointerId); } catch (err) { /* unsupported */ }
+    };
+    this.onUpSwipe = (e) => {
+      if (!this.touchStart) return;
+      const dx = e.clientX - this.touchStart[0];
+      const dy = e.clientY - this.touchStart[1];
+      this.touchStart = null;
+      if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+      if (Math.abs(dx) > Math.abs(dy)) this.move(0, dx > 0 ? 1 : -1);
+      else this.move(dy > 0 ? 1 : -1, 0);
+    };
+    this.boardEl.addEventListener('pointerdown', this.onDown);
+    this.boardEl.addEventListener('pointerup', this.onUpSwipe);
+  }
+
+  metrics() {
+    const slot = this.boardEl.firstElementChild.getBoundingClientRect();
+    const board = this.boardEl.getBoundingClientRect();
+    const first = slot;
+    const gap = parseFloat(getComputedStyle(this.boardEl).gap) || 10;
+    return { cell: first.width, gap, padX: first.left - board.left, padY: first.top - board.top };
+  }
+
+  emptyCells() {
+    const occupied = new Set();
+    for (const t of this.tiles.values()) occupied.add(t.r * 4 + t.c);
+    const out = [];
+    for (let i = 0; i < 16; i++) if (!occupied.has(i)) out.push([Math.floor(i / 4), i % 4]);
+    return out;
+  }
+
+  spawn() {
+    const empty = this.emptyCells();
+    if (!empty.length) return;
+    const [r, c] = pick(empty);
+    const value = Math.random() < 0.9 ? 2 : 4;
+    const id = this.nextId++;
+    this.tiles.set(id, { id, r, c, value, node: null, fresh: true });
+  }
+
+  tileClass(value) {
+    if (value <= 64) return 'tv-' + value;
+    if (value <= 2048) return 'tv-' + value;
+    return 'tv-big';
+  }
+
+  paint() {
+    const m = this.metrics();
+    for (const t of this.tiles.values()) {
+      if (!t.node) {
+        t.node = el('div', 'tm-tile', this.layer);
+        t.node.classList.add('spawn');
+        setTimeout(() => t.node && t.node.classList.remove('spawn'), 240);
+      }
+      t.node.textContent = String(t.value);
+      t.node.className = 'tm-tile ' + this.tileClass(t.value) + (t.value >= 1024 ? ' small-text' : '');
+      t.node.style.width = m.cell + 'px';
+      t.node.style.height = m.cell + 'px';
+      t.node.style.transform = `translate(${m.padX + t.c * (m.cell + m.gap)}px, ${m.padY + t.r * (m.cell + m.gap)}px)`;
+    }
+  }
+
+  move(dr, dc) {
+    if (this.moving) return;
+    const lines = [];
+    if (dr !== 0) {
+      for (let c = 0; c < 4; c++) {
+        const line = [];
+        for (let r = 0; r < 4; r++) line.push([dr === 1 ? 3 - r : r, c]);
+        lines.push(line);
+      }
+    } else {
+      for (let r = 0; r < 4; r++) {
+        const line = [];
+        for (let c = 0; c < 4; c++) line.push([r, dc === 1 ? 3 - c : c]);
+        lines.push(line);
+      }
+    }
+
+    const at = (r, c) => {
+      for (const t of this.tiles.values()) if (t.r === r && t.c === c) return t;
+      return null;
+    };
+
+    let movedAny = false;
+    let gained = 0;
+    const merges = [];
+    const removals = [];
+
+    for (const line of lines) {
+      const stack = line.map(([r, c]) => at(r, c)).filter(Boolean);
+      let write = 0;
+      let prev = null;
+      for (const tile of stack) {
+        if (prev && prev.value === tile.value && !prev.mergedThisTurn) {
+          const [tr, tc] = line[write - 1];
+          if (tile.r !== tr || tile.c !== tc) movedAny = true;
+          tile.r = tr; tile.c = tc;
+          prev.value *= 2;
+          prev.mergedThisTurn = true;
+          gained += prev.value;
+          merges.push(prev);
+          removals.push(tile);
+          movedAny = true;
+          prev = null;
+        } else {
+          const [tr, tc] = line[write];
+          if (tile.r !== tr || tile.c !== tc) movedAny = true;
+          tile.r = tr; tile.c = tc;
+          prev = tile;
+          write++;
+        }
+      }
+    }
+
+    if (!movedAny) return;
+    this.moving = true;
+    this.paint();
+
+    setTimeout(() => {
+      for (const dead of removals) {
+        this.tiles.delete(dead.id);
+        if (dead.node) { dead.node.remove(); dead.node = null; }
+      }
+      for (const t of this.tiles.values()) t.mergedThisTurn = false;
+      for (const m of merges) {
+        if (m.node) {
+          m.node.classList.remove('bounce');
+          void m.node.offsetWidth;
+          m.node.classList.add('bounce');
+        }
+      }
+      if (gained > 0) {
+        this.score += gained;
+        this.hud.setScore(this.score, true);
+      }
+      this.spawn();
+      this.paint();
+      this.moving = false;
+      this.checkGameOver();
+    }, 150);
+  }
+
+  checkGameOver() {
+    if (this.emptyCells().length > 0) return;
+    const grid = Array.from({ length: 4 }, () => Array(4).fill(0));
+    for (const t of this.tiles.values()) grid[t.r][t.c] = t.value;
+    for (let r = 0; r < 4; r++) {
+      for (let c = 0; c < 4; c++) {
+        if (r < 3 && grid[r][c] === grid[r + 1][c]) return;
+        if (c < 3 && grid[r][c] === grid[r][c + 1]) return;
+      }
+    }
+    const top = Math.max(...Array.from(this.tiles.values()).map(t => t.value));
+    this.hud.gameOver({
+      eyebrow: '合數字',
+      title: '冇得再郁喇',
+      extra: `最大嗰格 · ${top}`,
+      primaryLabel: '再玩一次',
+      onPrimary: () => App.navigate('tile-merge')
+    });
+  }
+
+  destroy() {
+    window.removeEventListener('keydown', this.onKey);
+    this.root.innerHTML = '';
+  }
+}
+
+/* ============================================================
+   Game 3: Color Flood
+   ============================================================ */
+/* === CUSTOMIZE: FLOOD COLORS === */
+const CF_PALETTE = [
+  { name: '灰藍', hex: '#64748b' },
+  { name: '湖水綠', hex: '#14b8a6' },
+  { name: '粉紅', hex: '#f43f5e' },
+  { name: '琥珀黃', hex: '#f59e0b' },
+  { name: '靛藍', hex: '#6366f1' }
+];
+
+class ColorFlood {
+  constructor(root, hud) {
+    this.root = root;
+    this.hud = hud;
+    this.size = 12;
+    /* === CUSTOMIZE: FLOOD MOVE LIMIT === */
+    this.maxMoves = 25;
+    this.movesUsed = 0;
+    this.animating = false;
+    this.over = false;
+    this.grid = Array.from({ length: 144 }, () => randInt(5));
+    this.par = this.computePar();
+    this.build();
+    this.paint(null);
+  }
+
+  neighbors(i) {
+    const r = Math.floor(i / 12), c = i % 12;
+    const out = [];
+    if (r > 0) out.push(i - 12);
+    if (r < 11) out.push(i + 12);
+    if (c > 0) out.push(i - 1);
+    if (c < 11) out.push(i + 1);
+    return out;
+  }
+
+  region(grid) {
+    const color = grid[0];
+    const seen = new Set([0]);
+    const dist = new Map([[0, 0]]);
+    const queue = [0];
+    while (queue.length) {
+      const cur = queue.shift();
+      for (const n of this.neighbors(cur)) {
+        if (!seen.has(n) && grid[n] === color) {
+          seen.add(n);
+          dist.set(n, dist.get(cur) + 1);
+          queue.push(n);
+        }
+      }
+    }
+    return { cells: seen, dist };
+  }
+
+  floodResult(grid, color) {
+    const { cells } = this.region(grid);
+    const next = grid.slice();
+    for (const i of cells) next[i] = color;
+    return next;
+  }
+
+  computePar() {
+    let sim = this.grid.slice();
+    let steps = 0;
+    while (steps < 60) {
+      const { cells } = this.region(sim);
+      if (cells.size === 144) break;
+      let bestColor = -1;
+      let bestSize = -1;
+      for (let color = 0; color < 5; color++) {
+        if (color === sim[0]) continue;
+        const trial = this.floodResult(sim, color);
+        const size = this.region(trial).cells.size;
+        if (size > bestSize) { bestSize = size; bestColor = color; }
+      }
+      sim = this.floodResult(sim, bestColor);
+      steps++;
+    }
+    return Math.min(steps + 2, this.maxMoves - 1);
+  }
+
+  build() {
+    const stage = el('div', 'game-stage', this.root);
+    const stats = el('div', 'substats', stage);
+    this.movesChip = this.makeChip(stats, '剩低步數', String(this.maxMoves));
+    this.parChip = this.makeChip(stats, '標準步數', String(this.par));
+    this.ownedChip = this.makeChip(stats, '已填', '');
+
+    this.boardEl = el('div', 'cf-board', stage);
+    this.cells = [];
+    for (let i = 0; i < 144; i++) this.cells.push(el('div', 'cf-cell', this.boardEl));
+    this.cells[0].classList.add('origin');
+
+    const palette = el('div', 'cf-palette', stage);
+    this.swatches = CF_PALETTE.map((color, idx) => {
+      const b = el('button', 'cf-swatch', palette);
+      b.style.background = color.hex;
+      b.setAttribute('aria-label', color.name);
+      b.title = color.name;
+      b.addEventListener('click', () => this.play(idx));
+      return b;
+    });
+
+    const hint = el('div', 'hint', stage);
+    hint.textContent = '由左上角開始填色。喺用完步數之前填滿成個棋盤。少過標準步數就係完美。';
+    this.updateStats();
+  }
+
+  makeChip(parent, label, value) {
+    const chip = el('div', 'chip', parent);
+    const l = el('span', 'label', chip);
+    l.textContent = label;
+    const v = el('span', 'value', chip);
+    v.textContent = value;
+    return v;
+  }
+
+  paint(waveDist) {
+    for (let i = 0; i < 144; i++) {
+      const cell = this.cells[i];
+      if (waveDist && waveDist.has(i)) {
+        cell.style.transitionDelay = Math.min(waveDist.get(i) * 22, 700) + 'ms';
+      } else {
+        cell.style.transitionDelay = '0ms';
+      }
+      cell.style.background = CF_PALETTE[this.grid[i]].hex;
+    }
+  }
+
+  updateStats() {
+    const owned = this.region(this.grid).cells.size;
+    this.movesChip.textContent = String(this.maxMoves - this.movesUsed);
+    this.ownedChip.textContent = owned + ' / 144';
+    this.swatches.forEach((b, idx) => {
+      b.disabled = idx === this.grid[0] || this.animating || this.over;
+      b.classList.toggle('active', idx === this.grid[0]);
+    });
+  }
+
+  play(color) {
+    if (this.animating || this.over || color === this.grid[0]) return;
+    const { cells, dist } = this.region(this.grid);
+    this.grid = this.floodResult(this.grid, color);
+    this.movesUsed++;
+    this.animating = true;
+    this.updateStats();
+    const maxDelay = Math.min(Math.max(...cells.size ? [...dist.values()] : [0]) * 22, 700);
+    this.paint(dist);
+    setTimeout(() => {
+      this.animating = false;
+      for (const cell of this.cells) cell.style.transitionDelay = '0ms';
+      this.updateStats();
+      this.checkEnd();
+    }, maxDelay + 260);
+  }
+
+  checkEnd() {
+    const owned = this.region(this.grid).cells.size;
+    const remaining = this.maxMoves - this.movesUsed;
+    if (owned === 144) {
+      this.over = true;
+      const score = remaining * 500;
+      this.hud.setScore(score);
+      const perfect = this.movesUsed <= this.par;
+      if (perfect) this.flashPerfect();
+      setTimeout(() => {
+        this.hud.gameOver({
+          eyebrow: '填顏色',
+          title: perfect ? '填得好完美' : '填滿晒',
+          extra: `用咗 ${this.movesUsed} 步（標準 ${this.par}）· 剩低 ${remaining} 步變成分數`,
+          primaryLabel: '再玩一次',
+          onPrimary: () => App.navigate('color-flood')
+        });
+      }, perfect ? 1500 : 400);
+    } else if (remaining <= 0) {
+      this.over = true;
+      this.hud.setScore(0);
+      this.hud.gameOver({
+        eyebrow: '填顏色',
+        title: '步數用晒',
+        extra: `填咗 ${owned} / 144 格`,
+        primaryLabel: '再玩一次',
+        onPrimary: () => App.navigate('color-flood')
+      });
+    }
+  }
+
+  flashPerfect() {
+    const wrap = el('div', 'cf-perfect', document.body);
+    const text = el('span', '', wrap);
+    text.textContent = '完美';
+    setTimeout(() => wrap.remove(), 1500);
+  }
+
+  destroy() {
+    this.root.innerHTML = '';
+  }
+}
+
+/* ============================================================
+   Game 4: Path Connector
+   ============================================================ */
+/* === CUSTOMIZE: PATH COLORS === */
+const PC_COLORS = ['#6366f1', '#14b8a6', '#f43f5e', '#f59e0b', '#38bdf8', '#a78bfa', '#34d399', '#e879f9'];
+
+class PathConnector {
+  constructor(root, hud) {
+    this.root = root;
+    this.hud = hud;
+    this.size = 6;
+    this.level = 1;
+    this.totalScore = 0;
+    this.multiplier = 1;
+    this.build();
+    this.startLevel();
+  }
+
+  build() {
+    const stage = el('div', 'game-stage', this.root);
+    const stats = el('div', 'substats', stage);
+    this.levelChip = this.makeChip(stats, '關數', '1');
+    this.multChip = this.makeChip(stats, '加成', '×1.0');
+    this.penChip = this.makeChip(stats, '扣分', '0');
+
+    this.wrap = el('div', 'pc-wrap', stage);
+    this.boardEl = el('div', 'pc-board', this.wrap);
+    for (let i = 0; i < 36; i++) el('div', 'pc-cell', this.boardEl);
+    this.svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    this.svg.setAttribute('class', 'pc-svg');
+    this.wrap.appendChild(this.svg);
+
+    const actions = el('div', 'substats', stage);
+    const reset = el('button', 'btn-ghost', actions);
+    reset.textContent = '重新玩呢一關';
+    reset.addEventListener('click', () => this.resetLevel());
+
+    const hint = el('div', 'hint', stage);
+    hint.textContent = '喺同色嘅點之間拖線。啲線唔可以交叉。連續連啱又唔拆返舊線，加成就會高啲。';
+
+    this.onDown = (e) => this.pointerDown(e);
+    this.onMove = (e) => this.pointerMove(e);
+    this.onUp = () => this.pointerUp();
+    this.wrap.addEventListener('pointerdown', this.onDown);
+    window.addEventListener('pointermove', this.onMove);
+    window.addEventListener('pointerup', this.onUp);
+  }
+
+  makeChip(parent, label, value) {
+    const chip = el('div', 'chip', parent);
+    const l = el('span', 'label', chip);
+    l.textContent = label;
+    const v = el('span', 'value', chip);
+    v.textContent = value;
+    return v;
+  }
+
+  generateLevel() {
+    for (let attempt = 0; attempt < 400; attempt++) {
+      const owner = Array(36).fill(-1);
+      const paths = [];
+      let failed = false;
+      while (true) {
+        const empty = [];
+        for (let i = 0; i < 36; i++) if (owner[i] === -1) empty.push(i);
+        if (!empty.length) break;
+        let cur = pick(empty);
+        const id = paths.length;
+        const path = [cur];
+        owner[cur] = id;
+        const targetLen = 4 + randInt(5);
+        while (path.length < targetLen) {
+          const options = this.adjacent(cur).filter(n => owner[n] === -1);
+          if (!options.length) break;
+          cur = pick(options);
+          owner[cur] = id;
+          path.push(cur);
+        }
+        if (path.length < 3) { failed = true; break; }
+        paths.push(path);
+      }
+      if (!failed && paths.length >= 4 && paths.length <= 7) {
+        return paths.map((p, i) => ({ color: PC_COLORS[i], a: p[0], b: p[p.length - 1] }));
+      }
+    }
+    return [
+      { color: PC_COLORS[0], a: 0, b: 35 },
+      { color: PC_COLORS[1], a: 5, b: 30 },
+      { color: PC_COLORS[2], a: 14, b: 21 },
+      { color: PC_COLORS[3], a: 2, b: 33 }
+    ];
+  }
+
+  adjacent(i) {
+    const r = Math.floor(i / 6), c = i % 6;
+    const out = [];
+    if (r > 0) out.push(i - 6);
+    if (r < 5) out.push(i + 6);
+    if (c > 0) out.push(i - 1);
+    if (c < 5) out.push(i + 1);
+    return out;
+  }
+
+  startLevel() {
+    this.pairs = this.generateLevel();
+    this.paths = this.pairs.map(() => ({ cells: [], complete: false }));
+    this.active = null;
+    this.redundant = 0;
+    this.levelChip.textContent = String(this.level);
+    this.penChip.textContent = '0';
+    this.renderMult();
+    this.draw();
+  }
+
+  resetLevel() {
+    this.multiplier = 1;
+    this.renderMult();
+    this.paths = this.pairs.map(() => ({ cells: [], complete: false }));
+    this.active = null;
+    this.redundant = 0;
+    this.penChip.textContent = '0';
+    this.draw();
+  }
+
+  renderMult() {
+    this.multChip.textContent = '×' + this.multiplier.toFixed(1);
+  }
+
+  cellOwner(idx) {
+    for (let p = 0; p < this.paths.length; p++) {
+      if (this.paths[p].cells.includes(idx)) return p;
+    }
+    return -1;
+  }
+
+  endpointAt(idx) {
+    for (let p = 0; p < this.pairs.length; p++) {
+      if (this.pairs[p].a === idx || this.pairs[p].b === idx) return p;
+    }
+    return -1;
+  }
+
+  cellFromEvent(e) {
+    const rect = this.boardEl.getBoundingClientRect();
+    const pad = 8;
+    const step = (rect.width - pad * 2) / 6;
+    const c = Math.floor((e.clientX - rect.left - pad) / step);
+    const r = Math.floor((e.clientY - rect.top - pad) / step);
+    if (r < 0 || c < 0 || r > 5 || c > 5) return -1;
+    return r * 6 + c;
+  }
+
+  pointerDown(e) {
+    e.preventDefault();
+    const idx = this.cellFromEvent(e);
+    if (idx < 0) return;
+    const ep = this.endpointAt(idx);
+    if (ep >= 0) {
+      if (this.paths[ep].complete || this.paths[ep].cells.length > 0) {
+        this.breakStreak();
+      }
+      this.paths[ep] = { cells: [idx], complete: false };
+      this.active = ep;
+      this.draw();
+      return;
+    }
+    const owner = this.cellOwner(idx);
+    if (owner >= 0 && !this.paths[owner].complete) {
+      const cells = this.paths[owner].cells;
+      const pos = cells.indexOf(idx);
+      const removed = cells.length - 1 - pos;
+      if (removed > 0) this.addPenalty(removed);
+      this.paths[owner].cells = cells.slice(0, pos + 1);
+      this.active = owner;
+      this.draw();
+    }
+  }
+
+  pointerMove(e) {
+    if (this.active === null) return;
+    e.preventDefault();
+    const target = this.cellFromEvent(e);
+    if (target < 0) return;
+    let guard = 0;
+    while (this.active !== null && guard++ < 12) {
+      const last = this.paths[this.active].cells[this.paths[this.active].cells.length - 1];
+      if (target === last) return;
+      const next = this.stepToward(last, target);
+      if (next === -1) return;
+      const advanced = this.tryExtend(next);
+      if (!advanced) return;
+    }
+  }
+
+  stepToward(from, to) {
+    const fr = Math.floor(from / 6), fc = from % 6;
+    const tr = Math.floor(to / 6), tc = to % 6;
+    if (fr === tr && fc !== tc) return from + Math.sign(tc - fc);
+    if (fc === tc && fr !== tr) return from + Math.sign(tr - fr) * 6;
+    if (this.adjacent(from).includes(to)) return to;
+    if (Math.abs(tc - fc) >= Math.abs(tr - fr)) return from + Math.sign(tc - fc);
+    return from + Math.sign(tr - fr) * 6;
+  }
+
+  tryExtend(idx) {
+    const path = this.paths[this.active];
+    const cells = path.cells;
+    const last = cells[cells.length - 1];
+    if (idx === last) return false;
+
+    const pos = cells.indexOf(idx);
+    if (pos >= 0) {
+      const removed = cells.length - 1 - pos;
+      this.addPenalty(removed);
+      path.cells = cells.slice(0, pos + 1);
+      this.draw();
+      return true;
+    }
+
+    if (!this.adjacent(last).includes(idx)) return false;
+
+    const pair = this.pairs[this.active];
+    const otherEndpoint = this.endpointAt(idx);
+    if (otherEndpoint >= 0 && otherEndpoint !== this.active) return false;
+    const owner = this.cellOwner(idx);
+    if (owner >= 0 && owner !== this.active) return false;
+
+    cells.push(idx);
+    const start = cells[0];
+    const goal = start === pair.a ? pair.b : pair.a;
+    if (idx === goal) {
+      path.complete = true;
+      this.active = null;
+      this.multiplier = Math.min(3, this.multiplier + 0.25);
+      this.renderMult();
+      this.draw();
+      this.checkLevelComplete();
+      return true;
+    }
+    this.draw();
+    return true;
+  }
+
+  pointerUp() {
+    this.active = null;
+  }
+
+  addPenalty(cellCount) {
+    this.redundant += cellCount;
+    this.penChip.textContent = String(this.redundant * 50);
+  }
+
+  breakStreak() {
+    this.multiplier = 1;
+    this.renderMult();
+  }
+
+  checkLevelComplete() {
+    if (!this.paths.every(p => p.complete)) return;
+    const base = Math.round(1000 * this.multiplier);
+    const levelScore = Math.max(100, base - this.redundant * 50);
+    this.totalScore += levelScore;
+    this.hud.setScore(this.totalScore, true);
+    const finishedLevel = this.level;
+    setTimeout(() => {
+      Overlay.show({
+        eyebrow: '連線',
+        title: `完成咗第 ${finishedLevel} 關`,
+        score: this.totalScore,
+        best: this.hud.best,
+        newBest: this.totalScore >= this.hud.best && this.totalScore > 0,
+        extra: `+${levelScore}（基本 ${base}，扣 ${this.redundant * 50}）`,
+        primaryLabel: '下一關',
+        onPrimary: () => {
+          this.level++;
+          this.startLevel();
+        }
+      });
+    }, 650);
+  }
+
+  draw() {
+    const rect = this.boardEl.getBoundingClientRect();
+    const pad = 8;
+    const step = (rect.width - pad * 2) / 6;
+    const center = (idx) => {
+      const r = Math.floor(idx / 6), c = idx % 6;
+      return [pad + c * step + step / 2, pad + r * step + step / 2];
+    };
+    this.svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
+    this.svg.setAttribute('width', rect.width);
+    this.svg.setAttribute('height', rect.height);
+    this.svg.innerHTML = '';
+
+    this.paths.forEach((path, i) => {
+      if (path.cells.length < 2) return;
+      const d = path.cells.map((idx, j) => {
+        const [x, y] = center(idx);
+        return (j === 0 ? 'M' : 'L') + x + ' ' + y;
+      }).join(' ');
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      line.setAttribute('d', d);
+      line.setAttribute('class', 'pc-path' + (path.complete ? ' complete' : ''));
+      line.setAttribute('stroke', this.pairs[i].color);
+      line.setAttribute('stroke-width', step * 0.34);
+      line.style.color = this.pairs[i].color;
+      this.svg.appendChild(line);
+    });
+
+    this.pairs.forEach((pair, i) => {
+      for (const idx of [pair.a, pair.b]) {
+        const [x, y] = center(idx);
+        const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+        dot.setAttribute('cx', x);
+        dot.setAttribute('cy', y);
+        dot.setAttribute('r', step * 0.26);
+        dot.setAttribute('fill', pair.color);
+        dot.setAttribute('class', 'pc-node' + (this.paths[i].complete ? ' complete' : ''));
+        dot.style.color = pair.color;
+        this.svg.appendChild(dot);
+      }
+    });
+  }
+
+  destroy() {
+    window.removeEventListener('pointermove', this.onMove);
+    window.removeEventListener('pointerup', this.onUp);
+    this.root.innerHTML = '';
+  }
+}
+
+/* ============================================================
+   Registry & boot
+   ============================================================ */
+App.register('block-blast', {
+  title: '砌方塊',
+  desc: '將一組一組嘅積木放上八乘八嘅棋盤。填滿一行或者一列就會消失，連住咁消就有更多分。',
+  icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>',
+  cls: BlockBlast
+});
+
+App.register('block-bomb', {
+  title: '炸彈方塊',
+  desc: '同砌方塊一樣，不過有時會有一嚿積木藏住炸彈。七步之內要消走佢，唔係就會爆，玩到呢度為止。',
+  icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="14" r="7"/><path d="M15.5 8.5L18 6M18 6h2M18 6V4"/></svg>',
+  cls: BombBlast
+});
+
+App.register('tile-merge', {
+  title: '合數字',
+  desc: '喺四乘四嘅格仔度推啲數字。一樣嘅數字撞埋會變雙倍，睇下可唔可以去到 2048。',
+  icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg>',
+  cls: TileMerge
+});
+
+App.register('color-flood', {
+  title: '填顏色',
+  desc: '由左上角開始，用五隻顏色填滿十二乘十二嘅棋盤。喺限定步數之內填晒，剩低嘅步數會變分數。',
+  icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3c3.5 4.5 7 7.6 7 11a7 7 0 1 1-14 0c0-3.4 3.5-6.5 7-11z"/></svg>',
+  cls: ColorFlood
+});
+
+App.register('path-connector', {
+  title: '連線',
+  desc: '喺六乘六嘅棋盤度將同色嘅點連埋一齊，啲線唔可以交叉。連得準又連得順，加成就會越嚟越高。',
+  icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 7c5 2 3 8 8 10"/></svg>',
+  cls: PathConnector
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  $('#backBtn').addEventListener('click', () => App.navigate('menu'));
+  window.addEventListener('resize', () => {
+    if (App.current && typeof App.current.paint === 'function') App.current.paint();
+    if (App.current && typeof App.current.draw === 'function') App.current.draw();
+  });
+  
+  // Initialize the global time-based reminder
+  ReminderSystem.init(); 
+  
+  
+  App.navigate('menu');
+});
+</script>
+
+<script>
+/* Score bridge: caretaker embeds this file in an iframe (/popo/games) and keeps the
+   leaderboard. Every time a game writes a new personal best, tell the parent window;
+   the parent is the only thing that talks to the database. Standalone (no parent),
+   these posts go nowhere and the file behaves exactly as it did before. */
+(function () {
+  if (window.parent === window) return;
+  const titles = {};
+  for (const [id, def] of Object.entries(App.registry)) titles[id] = def.title;
+
+  const set = Store.set.bind(Store);
+  Store.set = function (key, value) {
+    set(key, value);
+    if (typeof key !== 'string' || !key.startsWith('mp-best-')) return;
+    const gameId = key.slice('mp-best-'.length);
+    if (!titles[gameId] || !value) return;
+    window.parent.postMessage(
+      { type: 'caretaker-game-score', gameId, gameTitleZh: titles[gameId], score: value },
+      window.location.origin
+    );
+  };
+
+  // Hand over whatever this browser already had, so the board is never empty on first load.
+  for (const [gameId, title] of Object.entries(titles)) {
+    const best = Store.get('mp-best-' + gameId, 0);
+    if (best > 0) {
+      window.parent.postMessage(
+        { type: 'caretaker-game-score', gameId, gameTitleZh: title, score: best },
+        window.location.origin
+      );
+    }
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Users, Newspaper, Phone } from "lucide-react";
+import { Users, Newspaper, Phone, Gamepad2 } from "lucide-react";
 import { db } from "@/lib/db/client";
 
 export const dynamic = "force-dynamic";
@@ -34,6 +34,7 @@ export default async function PopoHome() {
         <DestinationButton href="/popo/people" icon={Users} label={zhHK.homeFamily} />
         <DestinationButton href="/popo/news" icon={Newspaper} label={zhHK.homeNews} />
         <DestinationButton href="/popo/call" icon={Phone} label={zhHK.homeChat} />
+        <DestinationButton href="/popo/games" icon={Gamepad2} label={zhHK.homeGames} />
       </div>
     </div>
   );

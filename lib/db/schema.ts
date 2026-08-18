@@ -22,3 +22,4 @@ export const newsItems = active.newsItems;
 export const callSessions = active.callSessions;
 export const relayMessages = active.relayMessages;
 export const relayState = active.relayState;
+export const gameScores = active.gameScores;
