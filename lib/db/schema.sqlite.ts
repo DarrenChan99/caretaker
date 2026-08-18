@@ -99,6 +99,7 @@ export const relayMessages = sqliteTable("relay_messages", {
   senderNameEn: text("sender_name_en").notNull(),
   textEn: text("text_en").notNull(),
   textZh: text("text_zh").notNull(),
+  mode: text("mode", { enum: ["message", "voice"] }).notNull().default("message"),
   createdAt: createdAt("created_at"),
   playedAt: integer("played_at", { mode: "timestamp" }),
 });

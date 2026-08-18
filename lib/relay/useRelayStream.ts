@@ -9,6 +9,7 @@ export interface RelayMessage {
   senderNameEn: string;
   textEn: string;
   textZh: string;
+  mode: "message" | "voice";
   createdAt: string;
   playedAt: string | null;
 }

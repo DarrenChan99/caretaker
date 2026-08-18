@@ -24,7 +24,20 @@ export default function PopoRelayPage() {
       .then((r) => r.json())
       .then((row: RelayMessage | null) => {
         setMessage(row);
-        setStage(row ? "ringing" : "empty");
+        if (!row) {
+          setStage("empty");
+        } else if (row.mode === "voice") {
+          setStage("ringing");
+        } else {
+          // Message mode has no audio step to gate on a tap — show the text
+          // straight away and mark it read.
+          setStage("reply-prompt");
+          void fetch("/api/relay/played", {
+            method: "POST",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({ id: row.id }),
+          });
+        }
       });
   }, []);
 

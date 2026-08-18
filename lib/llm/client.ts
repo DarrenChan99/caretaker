@@ -14,7 +14,7 @@ export const MODEL = {
       : process.env.LLM_PROVIDER === "gemini"
         ? "gemini-1.5-flash"
         : process.env.LLM_PROVIDER === "groq"
-          ? "llama-3.3-70b-versatile"
+          ? "openai/gpt-oss-20b"
           : "claude-haiku-4-5-20251001",
 };
 
@@ -90,6 +90,9 @@ export async function complete(system: string, user: string): Promise<string | n
         body: JSON.stringify({
           model: MODEL.name,
           max_tokens: MAX_TOKENS,
+          // gpt-oss is a reasoning model — without this it can burn the whole
+          // token budget on its reasoning trace and return empty content.
+          reasoning_effort: "low",
           messages: [
             { role: "system", content: system },
             { role: "user", content: user },
@@ -98,7 +101,7 @@ export async function complete(system: string, user: string): Promise<string | n
       });
       if (!res.ok) throw new Error(`groq ${res.status}`);
       const data = await res.json();
-      return data.choices?.[0]?.message?.content?.trim() ?? null;
+      return data.choices?.[0]?.message?.content?.trim() || null;
     }
 
     // gemini

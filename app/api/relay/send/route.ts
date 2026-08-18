@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db/client";
 import { relayMessages } from "@/lib/db/schema";
 import { translate } from "@/lib/llm/translate";
-import { deliver, type DeliveryMode } from "@/lib/relay/deliver";
+import type { DeliveryMode } from "@/lib/relay/deliver";
 import { setTurn } from "@/lib/events/bus";
 
 const ELDER_ID = "popo";
@@ -17,12 +17,10 @@ export async function POST(req: Request) {
 
   const [row] = await db
     .insert(relayMessages)
-    .values({ elderId: ELDER_ID, senderNameEn: "Ken", textEn, textZh })
+    .values({ elderId: ELDER_ID, senderNameEn: "Ken", textEn, textZh, mode })
     .returning();
 
   await setTurn("popo");
 
-  const delivery = await deliver(textZh, mode);
-
-  return NextResponse.json({ ...row, delivery });
+  return NextResponse.json({ ...row, delivery: { ok: true } });
 }
