@@ -10,11 +10,11 @@ import { confirmMedFromReminder } from "@/app/popo/actions";
  * Water + medication nudge. Mounted once in the Popo layout so it draws over every
  * screen she can be on, the games iframe included.
  *
- * DEMO CADENCE: 35 seconds, so the room sees it inside one walkthrough. The real
- * schedule is medications.scheduledTime — swap this constant for that lookup before
- * this goes near an actual resident, or she gets nagged every half minute.
+ * Fires once, 30 seconds after this app instance loads, then never again until the
+ * page reloads or a new tab opens. The real schedule is medications.scheduledTime —
+ * swap this constant for that lookup before this goes near an actual resident.
  */
-const REMINDER_INTERVAL_MS = 35_000;
+const REMINDER_DELAY_MS = 30_000;
 
 /** How long her answer stays on screen before the card clears itself. */
 const ACK_MS = 2600;
@@ -26,11 +26,11 @@ export function ReminderPopup() {
   const ackTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    const timer = setInterval(() => {
+    const timer = setTimeout(() => {
       // Never interrupt an answer she is already looking at.
       setPhase((current) => (current === "hidden" ? "asking" : current));
-    }, REMINDER_INTERVAL_MS);
-    return () => clearInterval(timer);
+    }, REMINDER_DELAY_MS);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {

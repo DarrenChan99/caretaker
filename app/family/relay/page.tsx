@@ -5,10 +5,12 @@ import { Mic, Radio } from "lucide-react";
 import { canSpeak, startRecognition } from "@/lib/audio/session";
 import { useRelayStream, type RelayMessage } from "@/lib/relay/useRelayStream";
 import { useRelayMode } from "@/lib/relay/useRelayMode";
+import { useSettings } from "@/lib/settings/useSettings";
 
 export default function FamilyRelayPage() {
   const { whoseTurn, status, revision } = useRelayStream();
   const { mode, setMode } = useRelayMode();
+  const { settings } = useSettings("family");
   const [messages, setMessages] = useState<RelayMessage[]>([]);
   const [listening, setListening] = useState(false);
   const [interim, setInterim] = useState("");
@@ -198,7 +200,9 @@ export default function FamilyRelayPage() {
               {fromKen ? (
                 <>
                   <p className="text-[15px] text-[var(--ink)]">{m.textEn}</p>
-                  <p className="zh text-[24px] text-[var(--sage-deep)]">{m.textZh}</p>
+                  {settings.showCaptions && (
+                    <p className="zh text-[24px] text-[var(--sage-deep)]">{m.textZh}</p>
+                  )}
                   <p className="font-[family-name:var(--font-mono)] text-[11px] uppercase tracking-[0.06em] text-[var(--ink-soft)]">
                     {m.playedAt
                       ? `Played on Popo's screen ${new Date(m.playedAt).toLocaleTimeString()}`
@@ -207,7 +211,7 @@ export default function FamilyRelayPage() {
                 </>
               ) : (
                 <>
-                  <p className="zh text-[22px] text-[var(--ink)]">{m.textZh}</p>
+                  {settings.showCaptions && <p className="zh text-[22px] text-[var(--ink)]">{m.textZh}</p>}
                   <p className="text-[15px] text-[var(--ink)]/70">{m.textEn}</p>
                 </>
               )}

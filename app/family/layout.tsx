@@ -1,5 +1,6 @@
 import { ViewRoot } from "@/components/ViewRoot";
 import { FamilyNav } from "@/components/family/FamilyNav";
+import { SettingsFab } from "@/components/family/SettingsFab";
 
 export default function FamilyLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export default function FamilyLayout({ children }: { children: React.ReactNode }
         </header>
         <FamilyNav />
         <main className="flex-1 px-4 py-4">{children}</main>
+        <SettingsFab />
       </div>
     </ViewRoot>
   );

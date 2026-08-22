@@ -9,7 +9,6 @@ const LINKS = [
   { href: "/family/news", label: "News" },
   { href: "/family/meds", label: "Meds" },
   { href: "/family/tree", label: "Tree" },
-  { href: "/family/settings", label: "Settings" },
 ];
 
 export function FamilyNav() {

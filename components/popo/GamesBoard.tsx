@@ -12,6 +12,20 @@ export interface ScoreRow {
   score: number;
 }
 
+/**
+ * Always-English titles keyed by the ids registered in public/games/index.html.
+ * The leaderboard renders from this map rather than the stored gameTitleZh column
+ * so an old row (recorded before a title/language change) can never resurface
+ * stale or non-English text.
+ */
+const GAME_TITLES: Record<string, string> = {
+  "block-blast": "Block Blast",
+  "block-bomb": "Bomb Blast",
+  "tile-merge": "Tile Merge",
+  "color-flood": "Color Flood",
+  "path-connector": "Path Connector",
+};
+
 /** Shape posted by the score bridge at the bottom of public/games/index.html. */
 interface ScoreMessage {
   type: "caretaker-game-score";
@@ -93,7 +107,7 @@ export function GamesBoard({ initialScores }: { initialScores: ScoreRow[] }) {
                   {i + 1}
                 </span>
                 <span className="flex-1 font-[family-name:var(--font-zh-sans)] text-[calc(26px*var(--scale))] text-[var(--ink)]">
-                  {row.gameTitleZh}
+                  {GAME_TITLES[row.gameId] ?? row.gameTitleZh}
                 </span>
                 <span className="font-[family-name:var(--font-zh-sans)] text-[calc(26px*var(--scale))] font-bold text-[var(--ink)]">
                   {zhHK.scoreUnit(row.score)}
