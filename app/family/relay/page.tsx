@@ -15,6 +15,8 @@ export default function FamilyRelayPage() {
   const [sending, setSending] = useState(false);
   const [typed, setTyped] = useState("");
   const stopRef = useRef<{ stop: () => void } | null>(null);
+  const transcriptRef = useRef("");
+  const wantListenRef = useRef(false);
 
   function refresh() {
     fetch("/api/relay/messages")
@@ -26,6 +28,15 @@ export default function FamilyRelayPage() {
   useEffect(() => {
     if (revision > 0) refresh();
   }, [revision]);
+
+  // Leaving the page must not leave the mic open.
+  useEffect(
+    () => () => {
+      wantListenRef.current = false;
+      stopRef.current?.stop();
+    },
+    [],
+  );
 
   async function send(textEn: string) {
     if (!textEn.trim()) return;
@@ -41,25 +52,58 @@ export default function FamilyRelayPage() {
     refresh();
   }
 
-  function toggleMic() {
-    if (listening) {
-      stopRef.current?.stop();
+  // The recognizer ends itself on a silence gap; while the user still has the mic
+  // toggled on we just start a fresh one and keep appending to the same transcript.
+  function beginRecognition() {
+    const handle = startRecognition({
+      lang: "en-US",
+      continuous: true,
+      onInterim: (text) => setInterim(`${transcriptRef.current} ${text}`.trim()),
+      onFinal: (text) => {
+        transcriptRef.current = `${transcriptRef.current} ${text}`.trim();
+        setInterim(transcriptRef.current);
+      },
+      onError: (message) => {
+        // A silence gap is normal here — anything else means the mic is gone.
+        if (message !== "no-speech" && message !== "aborted") wantListenRef.current = false;
+      },
+      onEnd: () => {
+        if (!wantListenRef.current) return;
+        setTimeout(() => {
+          if (wantListenRef.current) beginRecognition();
+        }, 0);
+      },
+    });
+    if (!handle) {
+      wantListenRef.current = false;
       setListening(false);
       return;
     }
+    stopRef.current = handle;
+  }
+
+  function stopListening() {
+    wantListenRef.current = false;
+    stopRef.current?.stop();
+    stopRef.current = null;
+    setListening(false);
+    const text = transcriptRef.current.trim();
+    transcriptRef.current = "";
+    setInterim("");
+    if (text) send(text);
+  }
+
+  function toggleMic() {
+    if (listening) {
+      stopListening();
+      return;
+    }
     if (!canSpeak("family", whoseTurn)) return;
+    transcriptRef.current = "";
+    wantListenRef.current = true;
     setListening(true);
     setInterim("");
-    const handle = startRecognition({
-      lang: "en-US",
-      onInterim: setInterim,
-      onFinal: (text) => {
-        setListening(false);
-        send(text);
-      },
-      onError: () => setListening(false),
-    });
-    stopRef.current = handle;
+    beginRecognition();
   }
 
   const disabled = !canSpeak("family", whoseTurn) || sending;
@@ -108,10 +152,10 @@ export default function FamilyRelayPage() {
         </button>
         <p className="max-w-[280px] text-center text-[15px] text-[var(--ink)]">
           {listening
-            ? interim || "Listening…"
+            ? interim || "Listening… tap again to send."
             : disabled && !sending
               ? "Waiting for Popo's reply…"
-              : "Hold to speak. Popo hears you in Cantonese."}
+              : "Tap to speak, tap again to send. Popo hears you in Cantonese."}
         </p>
       </div>
 

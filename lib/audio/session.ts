@@ -60,6 +60,9 @@ export function startRecognition(opts: {
   onInterim: (text: string) => void;
   onFinal: (text: string) => void;
   onError: (message: string) => void;
+  /** Keep listening across pauses; the caller decides when to stop. */
+  continuous?: boolean;
+  onEnd?: () => void;
 }): { stop: () => void } | null {
   const Ctor = getRecognitionCtor();
   if (!Ctor) {
@@ -72,7 +75,7 @@ export function startRecognition(opts: {
   const recognition = new Ctor();
   recognition.lang = opts.lang;
   recognition.interimResults = true;
-  recognition.continuous = false;
+  recognition.continuous = opts.continuous ?? false;
 
   recognition.onresult = (event) => {
     let interim = "";
@@ -85,7 +88,7 @@ export function startRecognition(opts: {
     if (interim) opts.onInterim(interim);
     if (final) {
       opts.onFinal(final);
-      recognition.stop();
+      if (!opts.continuous) recognition.stop();
     }
   };
 
@@ -95,6 +98,7 @@ export function startRecognition(opts: {
 
   recognition.onend = () => {
     if (activeRecognition === recognition) activeRecognition = null;
+    opts.onEnd?.();
   };
 
   activeRecognition = recognition;
