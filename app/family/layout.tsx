@@ -10,6 +10,7 @@ export default function FamilyLayout({ children }: { children: React.ReactNode }
         <header className="flex items-center justify-between border-b border-[var(--hairline)] px-4 py-3">
           <Link
             href="/"
+            target="_top"
             className="font-[family-name:var(--font-display)] text-[20px] font-semibold"
           >
             Caretaker
