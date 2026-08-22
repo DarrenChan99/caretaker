@@ -50,8 +50,11 @@ export async function GET() {
         let next: Snapshot;
         try {
           next = await snapshot();
-        } catch {
-          continue; // transient DB hiccup — client's own reconnect/backoff covers a real outage
+        } catch (err) {
+          // transient DB hiccup — client's own reconnect/backoff covers a real outage,
+          // but log it so a sustained outage is visible in server logs before a demo.
+          console.error("relay stream snapshot failed:", err instanceof Error ? err.message : err);
+          continue;
         }
 
         if (

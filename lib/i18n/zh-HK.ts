@@ -32,19 +32,19 @@ export const zhHK = {
   backHome: "Home",
 
   // /popo/games
-  homeGames: "玩遊戲",
-  gamesTitle: "玩遊戲",
-  leaderboard: "最高分",
-  leaderboardEmpty: "仲未有分數，玩一鋪先啦",
-  scoreUnit: (n: number) => `${n} 分`,
+  homeGames: "Play Games",
+  gamesTitle: "Games",
+  leaderboard: "Leaderboard",
+  leaderboardEmpty: "No scores yet — play a round!",
+  scoreUnit: (n: number) => `${n} pts`,
 
   // reminder popup (water + medication)
-  reminderTitle: "提提你",
-  reminderQuestion: "婆婆，飲咗水同食咗藥未呀？",
-  reminderYes: "食咗喇",
-  reminderNo: "未呀",
-  reminderThanks: "好呀，多謝婆婆",
-  reminderLater: "唔緊要，得閒飲啖水、食粒藥啦",
+  reminderTitle: "Reminder",
+  reminderQuestion: "Have you had some water and taken your medication?",
+  reminderYes: "Done",
+  reminderNo: "Not yet",
+  reminderThanks: "Great, thank you",
+  reminderLater: "No worries — remember to drink water and take your medicine",
 
   // /popo/call
   chat: "Chat",

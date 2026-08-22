@@ -12,7 +12,9 @@
     "seed": "tsx scripts/seed.ts",
     "seed:pg": "dotenv -e .env.neon.local -- tsx scripts/seed.ts",
     "seed:photos": "tsx scripts/seed-from-photos.ts",
-    "cache:prewarm": "tsx scripts/prewarm-cache.ts"
+    "cache:prewarm": "tsx scripts/prewarm-cache.ts",
+    "healthcheck": "tsx scripts/healthcheck.ts",
+    "healthcheck:pg": "dotenv -e .env.neon.local -- tsx scripts/healthcheck.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.1.0",

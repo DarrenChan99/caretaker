@@ -1,29 +1,29 @@
 <!DOCTYPE html>
-<html lang="zh-HK">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>玩遊戲</title>
+<title>Games</title>
 <style>
 /* === CUSTOMIZE: THEME DEFAULTS (page + board contrast) ===
    These are the fallback values for theme 0. The full theme list
    lives in the script section: search for "CUSTOMIZE: THEME COLORS". */
 :root {
-  --bg: #0a0f1e;
-  --board-bg: #263047;
-  --board-line: #40507a;
-  --cell-empty: rgba(148, 163, 184, 0.10);
-  --cell-border: rgba(148, 163, 184, 0.30);
-  --surface: #27272a;
-  --surface-2: #1e1e21;
-  --surface-3: #323236;
-  --line: #3f3f46;
-  --text: #e4e4e7;
-  --text-dim: #a1a1aa;
-  --text-faint: #71717a;
-  --accent: #6366f1;
-  --accent-soft: rgba(99, 102, 241, 0.16);
-  --accent-glow: rgba(99, 102, 241, 0.45);
+  --bg: #f5f1ea;
+  --board-bg: #efe9df;
+  --board-line: rgba(35, 52, 42, 0.16);
+  --cell-empty: rgba(79, 125, 94, 0.08);
+  --cell-border: rgba(35, 52, 42, 0.18);
+  --surface: #ffffff;
+  --surface-2: #fbfaf7;
+  --surface-3: #f1ece3;
+  --line: rgba(35, 52, 42, 0.12);
+  --text: #23342a;
+  --text-dim: #5a6b60;
+  --text-faint: #7c8a80;
+  --accent: #4f7d5e;
+  --accent-soft: rgba(79, 125, 94, 0.16);
+  --accent-glow: rgba(79, 125, 94, 0.45);
   --danger: #f43f5e;
   --teal: #14b8a6;
   --rose: #f43f5e;
@@ -44,8 +44,8 @@ html { overscroll-behavior: none; }
 
 body {
   background-image:
-    radial-gradient(1100px 600px at 80% -10%, rgba(99, 102, 241, 0.08), transparent 60%),
-    radial-gradient(900px 500px at -10% 110%, rgba(20, 184, 166, 0.05), transparent 60%);
+    radial-gradient(1100px 600px at 80% -10%, rgba(79, 125, 94, 0.08), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(169, 104, 42, 0.05), transparent 60%);
   background-color: var(--bg);
   color: var(--text);
   font-family: "Noto Sans HK", "PingFang HK", "Hiragino Sans CG", "Microsoft JhengHei", Inter, system-ui, -apple-system, sans-serif;
@@ -101,7 +101,7 @@ button {
   font-weight: 800;
   letter-spacing: 0.26em;
   text-indent: 0.26em;
-  background: linear-gradient(120deg, #f4f4f5 30%, #a5b4fc 70%, var(--accent));
+  background: linear-gradient(120deg, #23342a 30%, #4f7d5e 70%, var(--accent));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -140,8 +140,8 @@ button {
 
 .card:hover {
   transform: translateY(-4px);
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.12);
+  border-color: rgba(79, 125, 94, 0.55);
+  box-shadow: 0 14px 34px rgba(35, 52, 42, 0.12), 0 0 0 1px rgba(79, 125, 94, 0.16);
 }
 
 .card .glyph {
@@ -149,13 +149,13 @@ button {
   height: 40px;
   border-radius: 10px;
   background: var(--accent-soft);
-  border: 1px solid rgba(99, 102, 241, 0.35);
+  border: 1px solid rgba(79, 125, 94, 0.35);
   display: grid;
   place-items: center;
   margin-bottom: 6px;
 }
 
-.card .glyph svg { width: 20px; height: 20px; stroke: #a5b4fc; }
+.card .glyph svg { width: 20px; height: 20px; stroke: #3a5f47; }
 
 .card h3 { font-size: 17px; font-weight: 700; letter-spacing: 0.02em; }
 
@@ -175,7 +175,7 @@ button {
   transition: background 0.25s, transform 0.15s;
 }
 
-.card .play-btn:hover { background: #5457e0; }
+.card .play-btn:hover { background: #3a5f47; }
 .card .play-btn:active { transform: scale(0.97); }
 
 /* ---------- Game shell ---------- */
@@ -185,7 +185,7 @@ button {
   align-items: center;
   gap: 14px;
   padding: 14px 16px;
-  background: rgba(39, 39, 42, 0.75);
+  background: rgba(255, 255, 255, 0.75);
   border: 1px solid var(--line);
   border-radius: var(--radius);
   backdrop-filter: blur(8px);
@@ -240,10 +240,10 @@ button {
 
 .chip .value { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
 
-.chip.best .value { color: #a5b4fc; }
+.chip.best .value { color: #3a5f47; }
 
 .chip.glowing .value {
-  color: #fff;
+  color: var(--accent);
   animation: scoreGlow 1.3s ease-in-out infinite;
 }
 
@@ -310,15 +310,15 @@ button {
 
 .bb-cell.preview-ghost { border-color: transparent; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12); }
 .bb-cell.line-hot {
-  box-shadow: inset 0 0 0 2px rgba(224, 231, 255, 0.95), 0 0 14px rgba(99, 102, 241, 0.85), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.95), 0 0 14px rgba(79, 125, 94, 0.85), inset 0 -2px 0 rgba(0, 0, 0, 0.25);
   animation: lineHot 0.6s ease-in-out infinite alternate;
   z-index: 1;
   position: relative;
 }
 
 @keyframes lineHot {
-  from { filter: brightness(1.15); box-shadow: inset 0 0 0 2px rgba(224, 231, 255, 0.85), 0 0 8px rgba(99, 102, 241, 0.6), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
-  to { filter: brightness(1.55); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 1), 0 0 18px rgba(129, 140, 248, 1), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+  from { filter: brightness(1.15); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85), 0 0 8px rgba(79, 125, 94, 0.6), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
+  to { filter: brightness(1.55); box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 1), 0 0 18px rgba(58, 95, 71, 1), inset 0 -2px 0 rgba(0, 0, 0, 0.25); }
 }
 
 .bb-cell.pop { animation: cellPop 0.32s var(--ease); }
@@ -361,7 +361,7 @@ button {
   font-weight: 800;
   letter-spacing: 0.22em;
   text-indent: 0.22em;
-  color: #fff;
+  color: #23342a;
   text-shadow: 0 0 24px var(--accent-glow), 0 0 60px var(--accent-glow);
   animation: tossUp 1.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -623,7 +623,7 @@ button {
   font-weight: 800;
   letter-spacing: 0.3em;
   text-indent: 0.3em;
-  color: #a5b4fc;
+  color: #3a5f47;
   text-shadow: 0 0 30px var(--accent-glow);
   animation: perfectFlash 1.4s var(--ease) forwards;
 }
@@ -723,7 +723,7 @@ button {
 
 .ov-box .label { font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--text-faint); }
 .ov-box .value { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; margin-top: 3px; }
-.ov-box.hl .value { color: #a5b4fc; }
+.ov-box.hl .value { color: #3a5f47; }
 
 .ov-badge {
   display: inline-block;
@@ -731,8 +731,8 @@ button {
   padding: 5px 14px;
   border-radius: 999px;
   background: var(--accent-soft);
-  border: 1px solid rgba(99, 102, 241, 0.45);
-  color: #a5b4fc;
+  border: 1px solid rgba(79, 125, 94, 0.45);
+  color: #3a5f47;
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -780,7 +780,7 @@ button {
   transition: background 0.2s, transform 0.15s;
 }
 
-.btn-primary:hover { background: #5457e0; }
+.btn-primary:hover { background: #3a5f47; }
 .btn-primary:active { transform: scale(0.97); }
 
 .btn-ghost {
@@ -817,8 +817,8 @@ button {
 <div id="app">
   <section id="menu" class="view">
     <header class="hero">
-      <h1>玩遊戲</h1>
-      <p>五個輕鬆嘅遊戲。慢慢玩，唔使急。</p>
+      <h1>Games</h1>
+      <p>Five easy games. Take your time, no rush.</p>
       <div class="rule"></div>
     </header>
     <div class="card-grid" id="cardGrid"></div>
@@ -828,16 +828,16 @@ button {
     <header class="game-header">
       <button id="backBtn" class="back-btn">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-        返去
+        Back
       </button>
       <h2 id="gameTitle"></h2>
       <div class="score-chips">
         <div class="chip">
-          <span class="label">分數</span>
+          <span class="label">Score</span>
           <span class="value" id="scoreVal">0</span>
         </div>
         <div class="chip best" id="bestChip">
-          <span class="label">最高分</span>
+          <span class="label">Best</span>
           <span class="value" id="bestVal">0</span>
         </div>
       </div>
@@ -920,39 +920,39 @@ const THEME_SWITCH_POINTS = 750;
 
 const THEMES = [
   {
-    name: 'Indigo Night',
+    name: 'Sage Meadow',
     blocks: ['#6366f1', '#14b8a6', '#f43f5e', '#f59e0b', '#38bdf8', '#a78bfa', '#34d399'],
     vars: {
-      '--bg': '#0a0f1e', '--board-bg': '#263047', '--board-line': '#40507a',
-      '--cell-empty': 'rgba(148, 163, 184, 0.10)', '--cell-border': 'rgba(148, 163, 184, 0.30)',
-      '--accent': '#6366f1', '--accent-soft': 'rgba(99, 102, 241, 0.16)', '--accent-glow': 'rgba(99, 102, 241, 0.45)'
+      '--bg': '#f5f1ea', '--board-bg': '#efe9df', '--board-line': 'rgba(35, 52, 42, 0.16)',
+      '--cell-empty': 'rgba(79, 125, 94, 0.08)', '--cell-border': 'rgba(35, 52, 42, 0.18)',
+      '--accent': '#4f7d5e', '--accent-soft': 'rgba(79, 125, 94, 0.16)', '--accent-glow': 'rgba(79, 125, 94, 0.45)'
     }
   },
   {
-    name: 'Ember',
+    name: 'Olive Grove',
     blocks: ['#f59e0b', '#f97316', '#ef4444', '#eab308', '#fb7185', '#e11d48', '#fdba74'],
     vars: {
-      '--bg': '#150d08', '--board-bg': '#3a241a', '--board-line': '#6b4226',
-      '--cell-empty': 'rgba(251, 191, 36, 0.08)', '--cell-border': 'rgba(251, 191, 36, 0.28)',
-      '--accent': '#f59e0b', '--accent-soft': 'rgba(245, 158, 11, 0.16)', '--accent-glow': 'rgba(245, 158, 11, 0.45)'
+      '--bg': '#f2f0e2', '--board-bg': '#e7e3cd', '--board-line': 'rgba(74, 90, 42, 0.2)',
+      '--cell-empty': 'rgba(107, 124, 52, 0.08)', '--cell-border': 'rgba(74, 90, 42, 0.2)',
+      '--accent': '#6b7c34', '--accent-soft': 'rgba(107, 124, 52, 0.16)', '--accent-glow': 'rgba(107, 124, 52, 0.45)'
     }
   },
   {
-    name: 'Deep Teal',
+    name: 'Warm Tan',
     blocks: ['#14b8a6', '#2dd4bf', '#0ea5e9', '#34d399', '#22d3ee', '#84cc16', '#6366f1'],
     vars: {
-      '--bg': '#06110f', '--board-bg': '#153732', '--board-line': '#2a6157',
-      '--cell-empty': 'rgba(45, 212, 191, 0.08)', '--cell-border': 'rgba(45, 212, 191, 0.28)',
-      '--accent': '#14b8a6', '--accent-soft': 'rgba(20, 184, 166, 0.16)', '--accent-glow': 'rgba(20, 184, 166, 0.45)'
+      '--bg': '#f6ede0', '--board-bg': '#efe0c8', '--board-line': 'rgba(169, 104, 42, 0.22)',
+      '--cell-empty': 'rgba(169, 104, 42, 0.08)', '--cell-border': 'rgba(169, 104, 42, 0.22)',
+      '--accent': '#a9682a', '--accent-soft': 'rgba(169, 104, 42, 0.16)', '--accent-glow': 'rgba(169, 104, 42, 0.45)'
     }
   },
   {
-    name: 'Violet Haze',
+    name: 'Deep Moss',
     blocks: ['#a78bfa', '#c084fc', '#e879f9', '#818cf8', '#f472b6', '#8b5cf6', '#38bdf8'],
     vars: {
-      '--bg': '#0f0a1c', '--board-bg': '#2e2149', '--board-line': '#544080',
-      '--cell-empty': 'rgba(196, 181, 253, 0.09)', '--cell-border': 'rgba(196, 181, 253, 0.28)',
-      '--accent': '#a78bfa', '--accent-soft': 'rgba(167, 139, 250, 0.16)', '--accent-glow': 'rgba(167, 139, 250, 0.45)'
+      '--bg': '#eef0e6', '--board-bg': '#dbe1cd', '--board-line': 'rgba(58, 95, 71, 0.24)',
+      '--cell-empty': 'rgba(58, 95, 71, 0.1)', '--cell-border': 'rgba(58, 95, 71, 0.24)',
+      '--accent': '#3a5f47', '--accent-soft': 'rgba(58, 95, 71, 0.16)', '--accent-glow': 'rgba(58, 95, 71, 0.45)'
     }
   }
 ];
@@ -1042,11 +1042,11 @@ const SFX = {
    format: the message shown for a given streak. */
 const COMBO = {
   minStreak: 2,
-  format: (streak) => `連住 ${streak} 次！`
+  format: (streak) => `${streak} in a row!`
 };
 
 /* === CUSTOMIZE: BOARD CLEAR POPUP TEXT === */
-const BOARD_CLEAR_TEXT = '成個棋盤清晒！';
+const BOARD_CLEAR_TEXT = 'Board cleared!';
 
 /* === CUSTOMIZE: MEDICATION REMINDER (Global, Time-based) === */
 const REMINDER = {
@@ -1054,9 +1054,9 @@ const REMINDER = {
   // (components/popo/ReminderPopup.tsx), and two popups would fight.
   enabled: false,
   intervalMinutes: 1, // Pops up every 30 minutes
-  question: '婆婆，飲咗水同食咗藥未呀？',
-  yesLabel: '食咗喇',
-  noLabel: '未呀'
+  question: 'Have you had some water and taken your medicine?',
+  yesLabel: 'Yes, done',
+  noLabel: 'Not yet'
 };
 
 /* ============================================================
@@ -1083,7 +1083,7 @@ const Overlay = {
 
     if (newBest) {
       const badge = el('div', 'ov-badge', card);
-      badge.textContent = '新紀錄';
+      badge.textContent = 'New record';
     }
 
     const scores = el('div', 'ov-scores', card);
@@ -1094,8 +1094,8 @@ const Overlay = {
       const v = el('div', 'value', box);
       v.textContent = value;
     };
-    mk('分數', score, false);
-    mk('最高分', best, true);
+    mk('Score', score, false);
+    mk('Best', best, true);
 
     if (extra) {
       const ex = el('div', 'ov-extra', card);
@@ -1104,7 +1104,7 @@ const Overlay = {
 
     const actions = el('div', 'ov-actions', card);
     const retry = el('button', 'btn-primary', actions);
-    retry.textContent = primaryLabel || '再玩一次';
+    retry.textContent = primaryLabel || 'Play again';
     retry.addEventListener('click', () => { this.hide(); onPrimary && onPrimary(); });
     if (secondaryLabel && onSecondary) {
       const sec = el('button', 'btn-ghost', actions);
@@ -1112,11 +1112,11 @@ const Overlay = {
       sec.addEventListener('click', () => { this.node.remove(); this.node = null; onSecondary(); });
     }
     const menu = el('button', 'btn-ghost', actions);
-    menu.textContent = '返去';
+    menu.textContent = 'Back';
     menu.addEventListener('click', () => { this.hide(); (onMenu || (() => App.navigate('menu')))(); });
 
     const peekHint = el('div', 'ov-peek-hint', card);
-    peekHint.textContent = '㩒旁邊可以睇返個棋盤';
+    peekHint.textContent = 'Tap outside to peek at the board';
 
     this.node = wrap;
     retry.focus();
@@ -1130,7 +1130,7 @@ const Overlay = {
   showPill(label) {
     this.removePill();
     const pill = el('button', 'peek-pill', document.body);
-    pill.textContent = label || '睇返結果';
+    pill.textContent = label || 'View results';
     pill.addEventListener('click', () => {
       this.removePill();
       if (this.lastOpts) this.show(this.lastOpts);
@@ -1181,23 +1181,23 @@ const ReminderSystem = {
     const card = el('div', 'overlay-card', wrap);
     
     const eye = el('div', 'ov-eyebrow', card);
-    eye.textContent = '提提你';
-    
+    eye.textContent = 'Reminder';
+
     const h = el('h3', 'reminder-question', card);
     h.textContent = REMINDER.question;
-    
+
     const actions = el('div', 'ov-actions', card);
-    
+
     const yes = el('button', 'btn-primary', actions);
     yes.textContent = REMINDER.yesLabel;
     yes.addEventListener('click', close);
-    
+
     const no = el('button', 'btn-ghost', actions);
     no.textContent = REMINDER.noLabel;
     no.addEventListener('click', close);
-    
+
     const hint = el('div', 'ov-peek-hint', card);
-    hint.textContent = '㩒個掣就得';
+    hint.textContent = 'Just tap a button';
   }
 };
 
@@ -1273,7 +1273,7 @@ const App = {
       },
       gameOver(opts) {
         Overlay.show(Object.assign({
-          eyebrow: this.currentTitle || '玩完喇',
+          eyebrow: this.currentTitle || 'Game over',
           score,
           best,
           newBest: score >= best && score > 0
@@ -1294,9 +1294,9 @@ const App = {
       const p = el('p', '', card);
       p.textContent = def.desc;
       const meta = el('div', 'card-meta', card);
-      meta.textContent = '最高分 · ' + Store.get('mp-best-' + id, 0);
+      meta.textContent = 'Best · ' + Store.get('mp-best-' + id, 0);
       const btn = el('button', 'play-btn', card);
-      btn.textContent = '玩';
+      btn.textContent = 'Play';
       btn.addEventListener('click', () => this.navigate(id));
     }
   }
@@ -1418,7 +1418,7 @@ class BlockBlast {
   build() {
     const stage = el('div', 'game-stage', this.root);
     const stats = el('div', 'substats', stage);
-    this.streakChip = this.makeChip(stats, '連續', '0');
+    this.streakChip = this.makeChip(stats, 'Streak', '0');
     this.boardEl = el('div', 'bb-board', stage);
     this.boardEl.style.gridTemplateColumns = `repeat(${this.S}, var(--bb-cell))`;
     this.cells = [];
@@ -1429,7 +1429,7 @@ class BlockBlast {
     }
     this.trayEl = el('div', 'bb-tray', stage);
     const hint = el('div', 'hint', stage);
-    hint.textContent = '將積木拖上棋盤。填滿一行或者一列就會消失。';
+    hint.textContent = 'Drag the pieces onto the board. Fill a row or column to clear it.';
 
     this.onTrayDown = (e) => this.pointerDown(e);
     this.trayEl.addEventListener('pointerdown', this.onTrayDown);
@@ -2081,14 +2081,14 @@ class BlockBlast {
     const solution = this.findSolution(this.batchSnapshot, this.batch);
     this.floodWave(() => {
       this.hud.gameOver({
-        eyebrow: '砌方塊',
-        title: '冇位放喇',
+        eyebrow: 'Block Blast',
+        title: 'No more room',
         extra: solution
-          ? `最高連住 ×${this.streak || 0} · 呢副積木其實仲有得放`
-          : `最高連住 ×${this.streak || 0} · 呢副積木真係冇得放`,
-        primaryLabel: '再玩一次',
+          ? `Best streak ×${this.streak || 0} · there was still a spot for this set`
+          : `Best streak ×${this.streak || 0} · this set really had nowhere to go`,
+        primaryLabel: 'Play again',
         onPrimary: () => App.navigate(this.gameId),
-        secondaryLabel: solution ? '睇下有咩解法' : null,
+        secondaryLabel: solution ? 'Show me a solution' : null,
         onSecondary: solution ? () => this.showSolution(solution) : null
       });
     });
@@ -2333,10 +2333,10 @@ class BombBlast extends BlockBlast {
     this.timers.push(setTimeout(() => {
       wave.remove();
       this.hud.gameOver({
-        eyebrow: '炸彈方塊',
-        title: '炸彈爆咗！',
-        extra: `${BOMB.fuseRounds} 步之內冇消走藏住炸彈嗰格`,
-        primaryLabel: '再玩一次',
+        eyebrow: 'Bomb Blast',
+        title: 'Boom!',
+        extra: `The bomb block wasn't cleared within ${BOMB.fuseRounds} moves`,
+        primaryLabel: 'Play again',
         onPrimary: () => App.navigate(this.gameId)
       });
     }, 950));
@@ -2378,7 +2378,7 @@ class TileMerge {
     this.layer.style.inset = '0';
     this.layer.style.pointerEvents = 'none';
     const hint = el('div', 'hint', stage);
-    hint.textContent = '用箭嘴掣，或者用手指掃。一樣嘅數字撞埋會合埋。';
+    hint.textContent = 'Use the arrow keys, or swipe. Matching numbers merge together.';
 
     this.onKey = (e) => {
       const map = { ArrowUp: [-1, 0], ArrowDown: [1, 0], ArrowLeft: [0, -1], ArrowRight: [0, 1] };
@@ -2544,10 +2544,10 @@ class TileMerge {
     }
     const top = Math.max(...Array.from(this.tiles.values()).map(t => t.value));
     this.hud.gameOver({
-      eyebrow: '合數字',
-      title: '冇得再郁喇',
-      extra: `最大嗰格 · ${top}`,
-      primaryLabel: '再玩一次',
+      eyebrow: 'Tile Merge',
+      title: 'No more moves',
+      extra: `Highest tile · ${top}`,
+      primaryLabel: 'Play again',
       onPrimary: () => App.navigate('tile-merge')
     });
   }
@@ -2563,11 +2563,11 @@ class TileMerge {
    ============================================================ */
 /* === CUSTOMIZE: FLOOD COLORS === */
 const CF_PALETTE = [
-  { name: '灰藍', hex: '#64748b' },
-  { name: '湖水綠', hex: '#14b8a6' },
-  { name: '粉紅', hex: '#f43f5e' },
-  { name: '琥珀黃', hex: '#f59e0b' },
-  { name: '靛藍', hex: '#6366f1' }
+  { name: 'Slate Blue', hex: '#64748b' },
+  { name: 'Lake Green', hex: '#14b8a6' },
+  { name: 'Pink', hex: '#f43f5e' },
+  { name: 'Amber', hex: '#f59e0b' },
+  { name: 'Indigo', hex: '#6366f1' }
 ];
 
 class ColorFlood {
@@ -2644,9 +2644,9 @@ class ColorFlood {
   build() {
     const stage = el('div', 'game-stage', this.root);
     const stats = el('div', 'substats', stage);
-    this.movesChip = this.makeChip(stats, '剩低步數', String(this.maxMoves));
-    this.parChip = this.makeChip(stats, '標準步數', String(this.par));
-    this.ownedChip = this.makeChip(stats, '已填', '');
+    this.movesChip = this.makeChip(stats, 'Moves left', String(this.maxMoves));
+    this.parChip = this.makeChip(stats, 'Par', String(this.par));
+    this.ownedChip = this.makeChip(stats, 'Filled', '');
 
     this.boardEl = el('div', 'cf-board', stage);
     this.cells = [];
@@ -2664,7 +2664,7 @@ class ColorFlood {
     });
 
     const hint = el('div', 'hint', stage);
-    hint.textContent = '由左上角開始填色。喺用完步數之前填滿成個棋盤。少過標準步數就係完美。';
+    hint.textContent = 'Start from the top-left. Fill the whole board before you run out of moves. Under par is a perfect run.';
     this.updateStats();
   }
 
@@ -2727,10 +2727,10 @@ class ColorFlood {
       if (perfect) this.flashPerfect();
       setTimeout(() => {
         this.hud.gameOver({
-          eyebrow: '填顏色',
-          title: perfect ? '填得好完美' : '填滿晒',
-          extra: `用咗 ${this.movesUsed} 步（標準 ${this.par}）· 剩低 ${remaining} 步變成分數`,
-          primaryLabel: '再玩一次',
+          eyebrow: 'Color Flood',
+          title: perfect ? 'Perfect fill' : 'Board filled',
+          extra: `Used ${this.movesUsed} moves (par ${this.par}) · ${remaining} moves left became your score`,
+          primaryLabel: 'Play again',
           onPrimary: () => App.navigate('color-flood')
         });
       }, perfect ? 1500 : 400);
@@ -2738,10 +2738,10 @@ class ColorFlood {
       this.over = true;
       this.hud.setScore(0);
       this.hud.gameOver({
-        eyebrow: '填顏色',
-        title: '步數用晒',
-        extra: `填咗 ${owned} / 144 格`,
-        primaryLabel: '再玩一次',
+        eyebrow: 'Color Flood',
+        title: 'Out of moves',
+        extra: `Filled ${owned} / 144 cells`,
+        primaryLabel: 'Play again',
         onPrimary: () => App.navigate('color-flood')
       });
     }
@@ -2750,7 +2750,7 @@ class ColorFlood {
   flashPerfect() {
     const wrap = el('div', 'cf-perfect', document.body);
     const text = el('span', '', wrap);
-    text.textContent = '完美';
+    text.textContent = 'Perfect!';
     setTimeout(() => wrap.remove(), 1500);
   }
 
@@ -2780,9 +2780,9 @@ class PathConnector {
   build() {
     const stage = el('div', 'game-stage', this.root);
     const stats = el('div', 'substats', stage);
-    this.levelChip = this.makeChip(stats, '關數', '1');
-    this.multChip = this.makeChip(stats, '加成', '×1.0');
-    this.penChip = this.makeChip(stats, '扣分', '0');
+    this.levelChip = this.makeChip(stats, 'Level', '1');
+    this.multChip = this.makeChip(stats, 'Bonus', '×1.0');
+    this.penChip = this.makeChip(stats, 'Penalty', '0');
 
     this.wrap = el('div', 'pc-wrap', stage);
     this.boardEl = el('div', 'pc-board', this.wrap);
@@ -2793,11 +2793,11 @@ class PathConnector {
 
     const actions = el('div', 'substats', stage);
     const reset = el('button', 'btn-ghost', actions);
-    reset.textContent = '重新玩呢一關';
+    reset.textContent = 'Restart this level';
     reset.addEventListener('click', () => this.resetLevel());
 
     const hint = el('div', 'hint', stage);
-    hint.textContent = '喺同色嘅點之間拖線。啲線唔可以交叉。連續連啱又唔拆返舊線，加成就會高啲。';
+    hint.textContent = 'Drag a line between dots of the same color. Lines can\'t cross. Chain solves without redoing lines for a bigger bonus.';
 
     this.onDown = (e) => this.pointerDown(e);
     this.onMove = (e) => this.pointerMove(e);
@@ -3025,13 +3025,13 @@ class PathConnector {
     const finishedLevel = this.level;
     setTimeout(() => {
       Overlay.show({
-        eyebrow: '連線',
-        title: `完成咗第 ${finishedLevel} 關`,
+        eyebrow: 'Path Connector',
+        title: `Level ${finishedLevel} complete`,
         score: this.totalScore,
         best: this.hud.best,
         newBest: this.totalScore >= this.hud.best && this.totalScore > 0,
-        extra: `+${levelScore}（基本 ${base}，扣 ${this.redundant * 50}）`,
-        primaryLabel: '下一關',
+        extra: `+${levelScore} (base ${base}, penalty ${this.redundant * 50})`,
+        primaryLabel: 'Next level',
         onPrimary: () => {
           this.level++;
           this.startLevel();
@@ -3094,36 +3094,36 @@ class PathConnector {
    Registry & boot
    ============================================================ */
 App.register('block-blast', {
-  title: '砌方塊',
-  desc: '將一組一組嘅積木放上八乘八嘅棋盤。填滿一行或者一列就會消失，連住咁消就有更多分。',
+  title: 'Block Blast',
+  desc: 'Drag groups of blocks onto an 8x8 board. Fill a row or column to clear it, and chain clears for more points.',
   icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="8" height="8" rx="1.5"/><rect x="13" y="3" width="8" height="8" rx="1.5"/><rect x="3" y="13" width="8" height="8" rx="1.5"/></svg>',
   cls: BlockBlast
 });
 
 App.register('block-bomb', {
-  title: '炸彈方塊',
-  desc: '同砌方塊一樣，不過有時會有一嚿積木藏住炸彈。七步之內要消走佢，唔係就會爆，玩到呢度為止。',
+  title: 'Bomb Blast',
+  desc: 'Same as Block Blast, but sometimes a block hides a bomb. Clear it within 7 moves or it blows up and the game ends.',
   icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="14" r="7"/><path d="M15.5 8.5L18 6M18 6h2M18 6V4"/></svg>',
   cls: BombBlast
 });
 
 App.register('tile-merge', {
-  title: '合數字',
-  desc: '喺四乘四嘅格仔度推啲數字。一樣嘅數字撞埋會變雙倍，睇下可唔可以去到 2048。',
+  title: 'Tile Merge',
+  desc: 'Slide numbers around a 4x4 grid. Matching numbers double when they collide — see if you can reach 2048.',
   icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 12h6M12 9v6"/></svg>',
   cls: TileMerge
 });
 
 App.register('color-flood', {
-  title: '填顏色',
-  desc: '由左上角開始，用五隻顏色填滿十二乘十二嘅棋盤。喺限定步數之內填晒，剩低嘅步數會變分數。',
+  title: 'Color Flood',
+  desc: 'Starting from the top-left, fill a 12x12 board using five colors. Fill it before you run out of moves — leftover moves become your score.',
   icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3c3.5 4.5 7 7.6 7 11a7 7 0 1 1-14 0c0-3.4 3.5-6.5 7-11z"/></svg>',
   cls: ColorFlood
 });
 
 App.register('path-connector', {
-  title: '連線',
-  desc: '喺六乘六嘅棋盤度將同色嘅點連埋一齊，啲線唔可以交叉。連得準又連得順，加成就會越嚟越高。',
+  title: 'Path Connector',
+  desc: 'Connect matching dots on a 6x6 board with lines. Lines can\'t cross — connect cleanly and your bonus climbs higher.',
   icon: '<svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="6" cy="6" r="2.5"/><circle cx="18" cy="18" r="2.5"/><path d="M8 7c5 2 3 8 8 10"/></svg>',
   cls: PathConnector
 });

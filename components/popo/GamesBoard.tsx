@@ -56,7 +56,7 @@ export function GamesBoard({ initialScores }: { initialScores: ScoreRow[] }) {
   }, []);
 
   return (
-    <div className="flex min-h-dvh flex-col">
+    <div className="flex h-dvh flex-col overflow-hidden">
       <header className="flex items-center justify-between gap-[calc(12px*var(--scale))] px-[calc(20px*var(--scale))] py-[calc(16px*var(--scale))]">
         <h1 className="font-[family-name:var(--font-zh-sans)] text-[calc(36px*var(--scale))] font-bold text-[var(--ink)]">
           {zhHK.gamesTitle}
@@ -107,8 +107,7 @@ export function GamesBoard({ initialScores }: { initialScores: ScoreRow[] }) {
       <iframe
         src="/games/index.html"
         title={zhHK.gamesTitle}
-        className="mt-[calc(12px*var(--scale))] w-full flex-1 border-0"
-        style={{ minHeight: "70vh" }}
+        className="mt-[calc(12px*var(--scale))] w-full min-h-0 flex-1 border-0"
       />
     </div>
   );
