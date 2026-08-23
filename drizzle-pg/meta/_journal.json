@@ -15,6 +15,13 @@
       "when": 1787022392131,
       "tag": "0001_add_game_scores",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787451613927,
+      "tag": "0002_good_norman_osborn",
+      "breakpoints": true
     }
   ]
 }
