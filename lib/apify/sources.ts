@@ -13,3 +13,19 @@ export const NEWS_SOURCE = {
     link: "a",
   },
 };
+
+/**
+ * Stretch feature (family memory drafts from a family member's own public posts).
+ * Reuses the same generic cheerio-scraper actor as NEWS_SOURCE rather than a
+ * platform-specific scraper — cheerio only sees static HTML, so this works best
+ * against a public, mostly-static profile page. Verify against the real target
+ * site before relying on it; falls back to lib/apify/fixtures/social.json otherwise.
+ */
+export const SOCIAL_SOURCE = {
+  actorId: "apify/cheerio-scraper",
+  selectors: {
+    post: "article, .post",
+    text: "p",
+    image: "img",
+  },
+};

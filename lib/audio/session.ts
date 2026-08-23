@@ -4,6 +4,12 @@
  * The only place in the app that touches getUserMedia or unlocks the AudioContext.
  * Nothing else should call these browser APIs directly — that's what keeps only one
  * mic ever live and playback ever unblocked (§1.5).
+ *
+ * One sanctioned exception: LiveKit's <LiveKitRoom> acquires its own getUserMedia
+ * for the family<->popo video call. That's fine because video-call and
+ * relay/companion flows are mutually exclusive routes in this app — never mounted
+ * in the same tab at once — but startRecognition() below still refuses to start
+ * while a LiveKit room is live, so the invariant is enforced in code, not just here.
  */
 
 let audioCtx: AudioContext | null = null;
@@ -50,6 +56,12 @@ function getRecognitionCtor(): SpeechRecognitionCtor | null {
 }
 
 let activeRecognition: SpeechRecognition | null = null;
+let liveKitRoomActive = false;
+
+/** Called by the video-call page on room join/leave — see the module comment above. */
+export function setLiveKitRoomActive(active: boolean) {
+  liveKitRoomActive = active;
+}
 
 /**
  * Starts the single allowed recognizer for this tab. Stops any recognizer already
@@ -64,6 +76,11 @@ export function startRecognition(opts: {
   continuous?: boolean;
   onEnd?: () => void;
 }): { stop: () => void } | null {
+  if (liveKitRoomActive) {
+    opts.onError("A video call is active — speech recognition is unavailable until it ends.");
+    return null;
+  }
+
   const Ctor = getRecognitionCtor();
   if (!Ctor) {
     opts.onError("Speech recognition unavailable in this browser — use the typed fallback.");

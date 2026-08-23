@@ -26,3 +26,19 @@ export async function setTurn(turn: Turn): Promise<void> {
       set: { whoseTurn: turn, updatedAt: new Date() },
     });
 }
+
+/** Which familyMemberId (if any) is currently ringing a video call invite to popo. */
+export async function getCallInvite(): Promise<string | null> {
+  const [row] = await db.select().from(relayState).where(eq(relayState.elderId, ELDER_ID));
+  return row?.pendingCallFamilyMemberId ?? null;
+}
+
+export async function setCallInvite(familyMemberId: string | null): Promise<void> {
+  await db
+    .insert(relayState)
+    .values({ elderId: ELDER_ID, pendingCallFamilyMemberId: familyMemberId })
+    .onConflictDoUpdate({
+      target: relayState.elderId,
+      set: { pendingCallFamilyMemberId: familyMemberId, updatedAt: new Date() },
+    });
+}

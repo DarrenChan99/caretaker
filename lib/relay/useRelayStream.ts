@@ -25,6 +25,7 @@ export function useRelayStream() {
   const [whoseTurn, setWhoseTurn] = useState<Turn>("family");
   const [status, setStatus] = useState<ConnectionStatus>("reconnecting");
   const [revision, setRevision] = useState(0);
+  const [callInvite, setCallInvite] = useState<string | null>(null);
   const retryDelay = useRef(1000);
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export function useRelayStream() {
       es.onmessage = (event) => {
         const data = JSON.parse(event.data);
         if (data.whoseTurn) setWhoseTurn(data.whoseTurn);
+        if ("callInvite" in data) setCallInvite(data.callInvite);
         if (data.type === "update") setRevision((r) => r + 1);
       };
 
@@ -63,5 +65,5 @@ export function useRelayStream() {
     };
   }, []);
 
-  return { whoseTurn, status, revision };
+  return { whoseTurn, status, revision, callInvite };
 }

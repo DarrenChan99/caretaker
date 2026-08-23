@@ -57,6 +57,8 @@ export const zhHK = {
   listening: "Listening...",
   connecting: "Connecting...",
   connectionLostCalm: "Can't connect right now, please wait",
+  callEnded: "Call ended",
+  noActiveCall: "No call right now",
 
   // /family strings that surface Chinese
   medNotConfirmed: "Medication not confirmed",

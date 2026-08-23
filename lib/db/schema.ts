@@ -20,6 +20,7 @@ export const medications = active.medications;
 export const medEvents = active.medEvents;
 export const newsItems = active.newsItems;
 export const callSessions = active.callSessions;
+export const videoCallSessions = active.videoCallSessions;
 export const relayMessages = active.relayMessages;
 export const relayState = active.relayState;
 export const gameScores = active.gameScores;
