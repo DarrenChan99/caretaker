@@ -1,7 +1,7 @@
 import { desc } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { relayMessages } from "@/lib/db/schema";
-import { getTurn } from "@/lib/events/bus";
+import { getTurn, getCallInvite } from "@/lib/events/bus";
 
 export const dynamic = "force-dynamic";
 
@@ -11,17 +11,20 @@ type Snapshot = {
   whoseTurn: Awaited<ReturnType<typeof getTurn>>;
   latestMessageId: string | null;
   latestMessagePlayedAt: number | null;
+  callInvite: string | null;
 };
 
 async function snapshot(): Promise<Snapshot> {
-  const [whoseTurn, [latest]] = await Promise.all([
+  const [whoseTurn, [latest], callInvite] = await Promise.all([
     getTurn(),
     db.select().from(relayMessages).orderBy(desc(relayMessages.createdAt)).limit(1),
+    getCallInvite(),
   ]);
   return {
     whoseTurn,
     latestMessageId: latest?.id ?? null,
     latestMessagePlayedAt: latest?.playedAt ? new Date(latest.playedAt).getTime() : null,
+    callInvite,
   };
 }
 
@@ -60,7 +63,8 @@ export async function GET() {
         if (
           next.whoseTurn !== last.whoseTurn ||
           next.latestMessageId !== last.latestMessageId ||
-          next.latestMessagePlayedAt !== last.latestMessagePlayedAt
+          next.latestMessagePlayedAt !== last.latestMessagePlayedAt ||
+          next.callInvite !== last.callInvite
         ) {
           last = next;
           try {

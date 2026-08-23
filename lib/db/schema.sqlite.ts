@@ -36,6 +36,8 @@ export const familyMembers = sqliteTable("family_members", {
   voiceNotePath: text("voice_note_path"),
   treeParentId: text("tree_parent_id"),
   treeOrder: integer("tree_order").notNull().default(0),
+  // Opt-in public profile URL for the Apify memory-draft stretch feature — null = not enabled.
+  socialHandle: text("social_handle"),
 });
 
 export const memories = sqliteTable("memories", {
@@ -47,6 +49,9 @@ export const memories = sqliteTable("memories", {
   bodyZh: text("body_zh").notNull(),
   year: integer("year"),
   photoPath: text("photo_path"),
+  source: text("source", { enum: ["manual", "call", "apify"] }).notNull().default("manual"),
+  bodyEn: text("body_en"),
+  videoCallSessionId: text("video_call_session_id").references(() => videoCallSessions.id),
 });
 
 export const medications = sqliteTable("medications", {
@@ -91,6 +96,22 @@ export const callSessions = sqliteTable("call_sessions", {
   transcriptJson: text("transcript_json"),
 });
 
+// Family<->popo video call (LiveKit transport + client-side dual Vapi interpreter).
+// Kept separate from callSessions (reserved for the single-elder AI-companion call)
+// since this always has a familyMemberId — clean attribution, no name-matching guesswork.
+export const videoCallSessions = sqliteTable("video_call_sessions", {
+  id: id(),
+  elderId: text("elder_id")
+    .notNull()
+    .references(() => elders.id),
+  familyMemberId: text("family_member_id")
+    .notNull()
+    .references(() => familyMembers.id),
+  startedAt: createdAt("started_at"),
+  endedAt: integer("ended_at", { mode: "timestamp" }),
+  transcriptJson: text("transcript_json"), // TranscriptEntry[] — see components/videoCall/VideoCallRoom.tsx
+});
+
 export const relayMessages = sqliteTable("relay_messages", {
   id: id(),
   elderId: text("elder_id")
@@ -121,4 +142,6 @@ export const relayState = sqliteTable("relay_state", {
   elderId: text("elder_id").primaryKey(),
   whoseTurn: text("whose_turn", { enum: ["family", "popo", "idle"] }).notNull().default("family"),
   updatedAt: createdAt("updated_at"),
+  // Set while a video call invite is ringing on the popo side; null otherwise.
+  pendingCallFamilyMemberId: text("pending_call_family_member_id"),
 });

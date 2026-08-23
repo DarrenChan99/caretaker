@@ -8,3 +8,6 @@ export const CANTONESE_TO_ENGLISH_PROMPT =
 
 export const NEWS_CALM_FILTER_PROMPT =
   "Condense this Traditional Chinese news passage to roughly 120 characters, plain vocabulary, calm tone, Traditional characters. If it involves violence, death, crime, illness, or disaster, respond with exactly: null. Output only the condensed passage or null.";
+
+export const SOCIAL_POST_SUMMARY_PROMPT =
+  "Rewrite this social media post text as a short, warm memory note in Traditional Chinese (Cantonese written register), roughly 80 characters, as if telling a grandmother what a family member has been up to. Output only the note.";
