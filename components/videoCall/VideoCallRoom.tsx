@@ -31,6 +31,7 @@ export function VideoCallRoom({
   onEnded: () => void;
 }) {
   const [creds, setCreds] = useState<{ url: string; token: string } | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [room] = useState(() => new Room());
   const transcriptRef = useRef<TranscriptEntry[]>([]);
   const interpreter = useVapiInterpreter();
@@ -46,7 +47,18 @@ export function VideoCallRoom({
     })
       .then((r) => r.json())
       .then((data) => {
-        if (!cancelled) setCreds(data);
+        if (cancelled) return;
+        // The route returns {error} on missing LiveKit config; storing that
+        // unconditionally used to render <LiveKitRoom token={undefined}> — a
+        // blank screen with no clue why.
+        if (!data?.token || !data?.url) {
+          setError(data?.error ?? "Could not start the call");
+          return;
+        }
+        setCreds(data);
+      })
+      .catch(() => {
+        if (!cancelled) setError("Could not reach the call server");
       });
     return () => {
       cancelled = true;
@@ -83,6 +95,20 @@ export function VideoCallRoom({
       body: JSON.stringify({ familyMemberId, transcript: transcriptRef.current }),
     }).catch(() => {});
     onEnded();
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 px-8 text-center">
+        <p className="text-[17px] font-medium text-[var(--ink)]">{error}</p>
+        <button
+          onClick={onEnded}
+          className="min-h-[44px] rounded-[8px] border border-[var(--hairline)] bg-[var(--paper)] px-5 text-[15px] text-[var(--ink)]"
+        >
+          Back
+        </button>
+      </div>
+    );
   }
 
   if (!creds) return <p className="p-8 text-center text-[15px] text-[var(--ink-soft)]">Connecting…</p>;

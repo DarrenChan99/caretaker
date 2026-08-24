@@ -33,7 +33,7 @@ export default async function PopoHome() {
       <div className="flex flex-col gap-[calc(24px*var(--scale))]">
         <DestinationButton href="/popo/people" icon={Users} label={zhHK.homeFamily} />
         <DestinationButton href="/popo/news" icon={Newspaper} label={zhHK.homeNews} />
-        <DestinationButton href="/popo/call" icon={Phone} label={zhHK.homeChat} />
+        <DestinationButton href="/popo/relay" icon={Phone} label={zhHK.homeChat} />
         <DestinationButton href="/popo/games" icon={Gamepad2} label={zhHK.homeGames} />
       </div>
     </div>

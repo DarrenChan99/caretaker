@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Mic, Radio } from "lucide-react";
+import Link from "next/link";
+import { Mic, Video } from "lucide-react";
 import { canSpeak, startRecognition } from "@/lib/audio/session";
 import { useRelayStream, type RelayMessage } from "@/lib/relay/useRelayStream";
 import { useRelayMode } from "@/lib/relay/useRelayMode";
@@ -16,6 +17,7 @@ export default function FamilyRelayPage() {
   const [interim, setInterim] = useState("");
   const [sending, setSending] = useState(false);
   const [typed, setTyped] = useState("");
+  const [callHref, setCallHref] = useState<string | null>(null);
   const stopRef = useRef<{ stop: () => void } | null>(null);
   const transcriptRef = useRef("");
   const wantListenRef = useRef(false);
@@ -107,6 +109,15 @@ export default function FamilyRelayPage() {
     setInterim("");
     beginRecognition();
   }
+
+  useEffect(() => {
+    fetch("/api/family/me")
+      .then((r) => r.json())
+      .then((row: { id: string } | null) => {
+        if (row?.id) setCallHref(`/family/video-call/${row.id}`);
+      })
+      .catch(() => {});
+  }, []);
 
   const disabled = !canSpeak("family", whoseTurn) || sending;
 
@@ -220,10 +231,15 @@ export default function FamilyRelayPage() {
         })}
       </div>
 
-      <div className="flex items-center gap-2 rounded-[8px] border border-[var(--hairline)] px-3 py-2 text-[15px] text-[var(--ink-soft)]">
-        <Radio size={16} />
-        <span>Turn: {whoseTurn}</span>
-      </div>
+      {callHref && (
+        <Link
+          href={callHref}
+          className="flex min-h-[44px] items-center justify-center gap-2 rounded-[8px] bg-[var(--sage)] px-4 text-[15px] font-medium text-white"
+        >
+          <Video size={18} />
+          Call Popo
+        </Link>
+      )}
     </div>
   );
 }

@@ -40,9 +40,14 @@ export function releaseMicStream() {
 
 export type Turn = "family" | "popo" | "idle";
 
-/** A recognizer may only start when the shared turn flag names its side. */
-export function canSpeak(side: Exclude<Turn, "idle">, whoseTurn: Turn): boolean {
-  return whoseTurn === side;
+/**
+ * Both sides may always speak. This was `whoseTurn === side` (walkie-talkie
+ * turn-taking), but the baton is a single DB row that strands on whichever side
+ * spoke last — a stuck value disables one side forever, and "idle" disables both.
+ * ponytail: restore the `whoseTurn === side` check to go back to turn-taking.
+ */
+export function canSpeak(_side: Exclude<Turn, "idle">, _whoseTurn: Turn): boolean {
+  return true;
 }
 
 type SpeechRecognitionCtor = new () => SpeechRecognition;
