@@ -9,29 +9,30 @@ import { playTts } from "@/lib/relay/playTts";
 import { zhHK } from "@/lib/i18n/zh-HK";
 import type { RelayMessage } from "@/lib/relay/useRelayStream";
 
-type Stage = "loading" | "ringing" | "playing" | "reply-prompt" | "listening" | "sent" | "empty";
+type Stage = "loading" | "ringing" | "playing" | "reply-prompt" | "listening";
 
 export default function PopoRelayPage() {
   const router = useRouter();
-  const { whoseTurn } = useRelayStream();
+  const { whoseTurn, revision } = useRelayStream();
   const [stage, setStage] = useState<Stage>("loading");
   const [message, setMessage] = useState<RelayMessage | null>(null);
   const [typed, setTyped] = useState("");
   const [interim, setInterim] = useState("");
+  const [justSent, setJustSent] = useState(false);
 
   useEffect(() => {
     fetch("/api/relay/latest")
       .then((r) => r.json())
       .then((row: RelayMessage | null) => {
         setMessage(row);
-        if (!row) {
-          setStage("empty");
-        } else if (row.mode === "voice") {
+        if (row && row.mode === "voice" && !row.playedAt) {
           setStage("ringing");
-        } else {
-          // Message mode has no audio step to gate on a tap — show the text
-          // straight away and mark it read.
-          setStage("reply-prompt");
+          return;
+        }
+        // No message yet, or a text message: go straight to the compose screen so
+        // she can start a conversation rather than only ever reply to one.
+        setStage("reply-prompt");
+        if (row && !row.playedAt) {
           void fetch("/api/relay/played", {
             method: "POST",
             headers: { "content-type": "application/json" },
@@ -40,6 +41,19 @@ export default function PopoRelayPage() {
         }
       });
   }, []);
+
+  // The stream bumps `revision` on any change, so a message sent by family while
+  // she is sitting on this page shows up without a reload.
+  useEffect(() => {
+    if (revision === 0) return;
+    fetch("/api/relay/latest")
+      .then((r) => r.json())
+      .then((row: RelayMessage | null) => {
+        if (!row) return;
+        setMessage(row);
+        setJustSent(false);
+      });
+  }, [revision]);
 
   async function answer() {
     if (!message) return;
@@ -77,21 +91,14 @@ export default function PopoRelayPage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ textZh }),
     });
-    setStage("sent");
+    setTyped("");
+    setInterim("");
+    setJustSent(true);
+    // Back to compose, not a dead-end confirmation — the conversation continues.
+    setStage("reply-prompt");
   }
 
   if (stage === "loading") return null;
-
-  if (stage === "empty") {
-    return (
-      <Screen>
-        <p className="text-center font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] font-bold">
-          {zhHK.noNewsToday}
-        </p>
-        <HomeButton router={router} />
-      </Screen>
-    );
-  }
 
   if (stage === "ringing") {
     return (
@@ -126,9 +133,22 @@ export default function PopoRelayPage() {
   if (stage === "reply-prompt" || stage === "listening") {
     return (
       <Screen>
-        <p className="max-w-[18ch] text-center font-[family-name:var(--font-zh-sans)] text-[calc(28px*var(--scale))] leading-[1.7] text-[var(--ink)]">
-          {message?.textZh}
-        </p>
+        {message ? (
+          <p className="max-w-[18ch] text-center font-[family-name:var(--font-zh-sans)] text-[calc(28px*var(--scale))] leading-[1.7] text-[var(--ink)]">
+            {message.textZh}
+          </p>
+        ) : (
+          <p className="max-w-[18ch] text-center font-[family-name:var(--font-zh-sans)] text-[calc(28px*var(--scale))] leading-[1.7] text-[var(--ink-soft)]">
+            {zhHK.noNewsToday}
+          </p>
+        )}
+
+        {justSent && (
+          <p className="flex items-center gap-2 font-[family-name:var(--font-zh-sans)] text-[calc(22px*var(--scale))] text-[var(--sage-deep)]">
+            <Volume2 size={28} />
+            Sent to family
+          </p>
+        )}
 
         {stage === "listening" && interim && (
           <p className="font-[family-name:var(--font-zh-sans)] text-[calc(24px*var(--scale))] text-[var(--sage-deep)]">
@@ -169,20 +189,13 @@ export default function PopoRelayPage() {
 Send
           </button>
         </form>
+
+        <HomeButton router={router} />
       </Screen>
     );
   }
 
-  // sent
-  return (
-    <Screen>
-      <Volume2 size={64} className="text-[var(--sage)]" />
-      <p className="font-[family-name:var(--font-zh-sans)] text-[calc(28px*var(--scale))] font-medium text-[var(--ink)]">
-Sent to family
-      </p>
-      <HomeButton router={router} />
-    </Screen>
-  );
+  return null;
 }
 
 function Screen({ children }: { children: React.ReactNode }) {
