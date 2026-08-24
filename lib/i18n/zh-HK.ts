@@ -73,6 +73,25 @@ export const zhHK = {
   translateOff: "Translate · 翻譯",
   translateOn: "Translating · 翻譯緊",
 
+  // video call — Popo's controls. She gets volume and a way out, nothing else:
+  // a muted grandmother is a support call, not a feature.
+  volumeDown: "Softer", // 細聲
+  volumeUp: "Louder", // 大聲
+  volume: "Volume", // 音量
+  // "You can still hear him" is load-bearing, not decoration — without it a dark
+  // tile reads as a dropped call.
+  // No name interpolated: splicing a Latin name into this line is what produces
+  // "Ken熄咗個鏡頭" once the Cantonese values come back.
+  cameraOff: "The camera is off", // 個鏡頭熄咗
+  stillHear: "You can still hear them", // 你仲聽到佢
+  // Plain words, never 08:14 — a clock readout is not what she needs from a call.
+  callDuration: (mins: number, name: string) => `You talked with ${name} for ${mins} minutes`,
+
+  // missed call, shown as a card on her home screen
+  missedCall: "Missed call",
+  justCalled: (name: string) => `${name} just called you`, // {name}啱啱打過嚟
+  callBack: "Call back", // 打返俾佢
+
   // /family strings that surface Chinese
   medNotConfirmed: "Medication not confirmed",
   medConfirmed: "Medication confirmed",

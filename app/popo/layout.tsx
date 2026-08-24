@@ -4,6 +4,7 @@ import { PopoIncomingCall } from "@/components/popo/PopoIncomingCall";
 import { ReminderPopup } from "@/components/popo/ReminderPopup";
 import { SettingsFab } from "@/components/popo/SettingsFab";
 import { HomeFab } from "@/components/popo/HomeFab";
+import { CallFab } from "@/components/popo/CallFab";
 
 export default function PopoLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,6 +18,7 @@ export default function PopoLayout({ children }: { children: React.ReactNode }) 
           <ReminderPopup />
         </EntryGate>
         <HomeFab />
+        <CallFab />
         <SettingsFab />
       </div>
     </ViewRoot>

@@ -2,11 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Room, RoomEvent, Track } from "livekit-client";
-import { LiveKitRoom, VideoConference } from "@livekit/components-react";
-import { Languages } from "lucide-react";
+import { LiveKitRoom } from "@livekit/components-react";
 import { useVapiInterpreter } from "@/lib/vapi/interpreter";
 import { setVoiceCallActive } from "@/lib/audio/session";
-import { zhHK } from "@/lib/i18n/zh-HK";
+import { CallStage } from "./CallStage";
 
 export interface TranscriptEntry {
   speaker: "family" | "popo";
@@ -39,6 +38,10 @@ export function VideoCallRoom({
   const [room] = useState(() => new Room());
   const [translating, setTranslating] = useState(false);
   const transcriptRef = useRef<TranscriptEntry[]>([]);
+  // Display only, and deliberately separate from transcriptRef: each side POSTs its
+  // own half at hangup, so folding the peer's turns into the ref would have the
+  // server store the conversation twice.
+  const [turns, setTurns] = useState<TranscriptEntry[]>([]);
   const translatingRef = useRef(false);
   const interpreter = useVapiInterpreter();
   const sourceLang = side === "family" ? "en" : "zh";
@@ -105,8 +108,18 @@ export function VideoCallRoom({
   useEffect(() => {
     const onData = (payload: Uint8Array) => {
       try {
-        const msg = JSON.parse(new TextDecoder().decode(payload)) as { t?: string; on?: boolean };
+        const msg = JSON.parse(new TextDecoder().decode(payload)) as {
+          t?: string;
+          on?: boolean;
+          e?: TranscriptEntry;
+        };
         if (msg.t === "translate" && typeof msg.on === "boolean") applyTranslating(msg.on, false);
+        // Each side's interpreter only ever hears its own mic, so without this the
+        // transcript lane would show half a conversation.
+        if (msg.t === "transcript" && msg.e) {
+          const entry = msg.e;
+          setTurns((prev) => [...prev, entry]);
+        }
       } catch {
         // Not ours — other features may share the data channel.
       }
@@ -127,14 +140,21 @@ export function VideoCallRoom({
       sourceLang,
       targetLang,
       (text, kind) => {
-        transcriptRef.current.push({
+        const entry: TranscriptEntry = {
           speaker: side,
           lang: kind === "source" ? sourceLang : targetLang,
           kind,
           text,
           at: Date.now(),
           translating: translatingRef.current,
-        });
+        };
+        transcriptRef.current.push(entry);
+        setTurns((prev) => [...prev, entry]);
+        void room.localParticipant
+          .publishData(new TextEncoder().encode(JSON.stringify({ t: "transcript", e: entry })), {
+            reliable: true,
+          })
+          .catch(() => {});
       },
       (wantsTranslation) => applyTranslating(wantsTranslation, true),
     );
@@ -181,34 +201,15 @@ export function VideoCallRoom({
         data-lk-theme="default"
         style={{ height: "100%" }}
       >
-        <VideoConference />
-        <TranslateToggle on={translating} onToggle={() => applyTranslating(!translating, true)} />
+        <CallStage
+          side={side}
+          translating={translating}
+          onToggleTranslate={() => applyTranslating(!translating, true)}
+          turns={turns}
+          onEnd={() => void room.disconnect()}
+        />
       </LiveKitRoom>
     </div>
   );
 }
 
-/**
- * The discoverable half of the feature. "Hey Vapi, translate" is invisible and Popo
- * will not remember it, so the same switch has to be on screen — and it doubles as the
- * way out when the model mishears and turns translation on by itself.
- *
- * Sits above the LiveKit control bar rather than inside it; <VideoConference/> owns its
- * own toolbar and there is no supported slot to add a button to it.
- */
-function TranslateToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
-  return (
-    <button
-      onClick={onToggle}
-      aria-pressed={on}
-      className="absolute bottom-[92px] left-1/2 z-50 flex min-h-[56px] -translate-x-1/2 items-center gap-3 rounded-full px-6 text-[17px] font-medium shadow-lg"
-      style={{
-        background: on ? "var(--sage)" : "rgba(0,0,0,0.65)",
-        color: "#fff",
-      }}
-    >
-      <Languages size={24} />
-      {on ? zhHK.translateOn : zhHK.translateOff}
-    </button>
-  );
-}

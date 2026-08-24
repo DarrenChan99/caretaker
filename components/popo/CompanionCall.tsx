@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
-import { Heart, PhoneOff, Home } from "lucide-react";
+import { Heart, PhoneOff } from "lucide-react";
 import { buildCompanionAssistant } from "@/lib/vapi/companionConfig";
 import { setVoiceCallActive } from "@/lib/audio/session";
 import { zhHK } from "@/lib/i18n/zh-HK";
+import { CallScreen, HomeButton } from "@/components/popo/CallScreen";
 import type { CompanionVariables } from "@/lib/vapi/systemPrompt";
 
 type Status = "idle" | "connecting" | "live" | "ended" | "error";
@@ -24,7 +24,6 @@ type VapiLike = {
  * she never needs to see how it is built.
  */
 export function CompanionCall({ vars }: { vars: Partial<CompanionVariables> }) {
-  const router = useRouter();
   const [status, setStatus] = useState<Status>("idle");
   const vapiRef = useRef<VapiLike | null>(null);
   const turnsRef = useRef<Turn[]>([]);
@@ -95,13 +94,13 @@ export function CompanionCall({ vars }: { vars: Partial<CompanionVariables> }) {
 
   if (status === "live" || status === "connecting") {
     return (
-      <Screen>
+      <CallScreen>
         <p className="font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] font-bold text-[var(--ink)]">
           {status === "live" ? zhHK.companionLive : zhHK.companionConnecting}
         </p>
         <button
           onClick={endCall}
-          className="flex w-[calc(200px*var(--scale))] flex-col items-center justify-center gap-2 rounded-full bg-[#8a3a3a] text-white"
+          className="flex w-[calc(200px*var(--scale))] flex-col items-center justify-center gap-2 rounded-full bg-[var(--surface-destructive)] text-white"
           style={{ height: "calc(200px * var(--scale))" }}
         >
           <PhoneOff size={64} />
@@ -109,12 +108,12 @@ export function CompanionCall({ vars }: { vars: Partial<CompanionVariables> }) {
             {zhHK.hangUp}
           </span>
         </button>
-      </Screen>
+      </CallScreen>
     );
   }
 
   return (
-    <Screen>
+    <CallScreen>
       {status === "error" && (
         <p className="max-w-[18ch] font-[family-name:var(--font-zh-sans)] text-[calc(24px*var(--scale))] leading-[1.7] text-[var(--ink-soft)]">
           {zhHK.companionUnavailable}
@@ -130,21 +129,8 @@ export function CompanionCall({ vars }: { vars: Partial<CompanionVariables> }) {
       <p className="max-w-[18ch] font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] font-medium text-[var(--ink)]">
         {status === "ended" ? zhHK.companionAgain : zhHK.homeCompanion}
       </p>
-      <button
-        onClick={() => router.push("/popo")}
-        className="flex min-h-[max(72px,calc(44px*var(--scale)))] items-center gap-2 rounded-[16px] border-2 border-[var(--sage)] bg-[var(--paper)] px-6 font-[family-name:var(--font-zh-sans)] text-[calc(24px*var(--scale))] text-[var(--sage-deep)]"
-      >
-        <Home size={32} />
-        {zhHK.backHome}
-      </button>
-    </Screen>
+      <HomeButton />
+    </CallScreen>
   );
 }
 
-function Screen({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-[calc(32px*var(--scale))] bg-[var(--cream)] px-8 text-center">
-      {children}
-    </div>
-  );
-}

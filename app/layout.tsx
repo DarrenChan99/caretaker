@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import {
   Fraunces,
   IBM_Plex_Sans,
@@ -39,9 +39,27 @@ const notoSerifTC = Noto_Serif_TC({
   weight: ["400", "700"],
 });
 
+const title = "Caretaker";
+const description = "A screen that speaks Popo's language.";
+
 export const metadata: Metadata = {
-  title: "Caretaker",
-  description: "A screen that speaks Popo's language.",
+  // Without a base, the OG image resolves relative and breaks in link previews.
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ??
+      (process.env.VERCEL_PROJECT_PRODUCTION_URL
+        ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+        : "http://localhost:3000"),
+  ),
+  title,
+  description,
+  applicationName: title,
+  openGraph: { title, description, siteName: title, type: "website" },
+  twitter: { card: "summary_large_image", title, description },
+  appleWebApp: { capable: true, title, statusBarStyle: "default" },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#4f7d5e",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

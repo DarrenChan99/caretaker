@@ -18,6 +18,84 @@
   --font-mono: var(--font-plex-mono);
   --font-zh-sans: var(--font-noto-sans-tc);
   --font-zh-serif: var(--font-noto-serif-tc);
+
+  /* ---- Design-system ramps (§5.1) ----
+     Only the steps the existing palette has no equivalent for. --sage/--cream/--ink
+     stay the source of truth for everything themeable; these are fixed by design —
+     they name surfaces that are dark on purpose (call stages, control bars), which
+     must not invert under the dark theme. */
+  --green-900: #101a14;
+  --green-700: #2f5540;
+  --green-400: #6d9a7c;
+  --green-200: #b9cfc0;
+  --green-100: #dce7de;
+  --cream-200: #ede6da;
+  --status-caution: var(--amber);
+  --status-caution-bg: #f2e8d2;
+
+  /* ---- Semantic aliases ----
+     These point at the themeable primitives above, never at literals, so
+     high-contrast and dark themes keep working. */
+  --canvas: var(--cream);
+  --surface-card: var(--paper);
+  --surface-sunken: var(--cream-200);
+  --surface-primary: var(--sage);
+  --surface-primary-press: var(--sage-deep);
+  --surface-quiet: var(--green-100);
+  /* Ending a call is ordinary, so it takes ink, never red. */
+  --surface-destructive: var(--green-900);
+  --text-body: var(--ink);
+  --text-muted: var(--ink-soft);
+  --text-action: var(--sage-deep);
+  --text-on-primary: #fff;
+  --text-on-primary-muted: rgba(255, 255, 255, 0.78);
+  --border-hairline: var(--hairline);
+
+  /* ---- Radius (§5.4) ----
+     These names collide with Tailwind's own --radius-* theme vars, and because this
+     block comes after @import "tailwindcss" they win. That's intended: `rounded-md`
+     should mean the design system's 14px, not Tailwind's 6px. Nothing in the app uses
+     those utilities today — every call site writes rounded-[...] or rounded-full — but
+     anyone who reaches for one now gets the brand radius. Same applies to --ease-out. */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-pill: 999px;
+
+  /* ---- Spacing ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+
+  /* ---- Elevation. Warm, low, wide — never a grey or blue shadow on cream. ---- */
+  --shadow-raised: 0 2px 8px rgba(37, 58, 44, 0.07);
+  --shadow-dialog: 0 24px 60px rgba(30, 46, 35, 0.2);
+  /* Cream inner ring then green outer, so the indicator reads on both cream and
+     sage surfaces. Never remove it. */
+  --ring-focus: 0 0 0 3px var(--cream), 0 0 0 6px var(--green-400);
+
+  /* ---- Motion ---- */
+  --ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+  --dur-slow: 320ms;
+
+  /* ---- Control sizing. Caregiver defaults; [data-view="popo"] enlarges them. ---- */
+  --control-height-sm: 40px;
+  --control-height-md: 48px;
+  --control-height-lg: 56px;
+  --icon-size: 20px;
+  --icon-size-lg: 28px;
+  --row-min-height: 56px;
 }
 
 /* high-contrast-dark theme (§5.3) */
@@ -55,6 +133,18 @@ body {
   --scale: 1;
 }
 
+/* The resident scale. The design system ships this as a .ct-resident class; the app
+   already has a view scope, so it hangs off that rather than adding a second
+   mechanism. Popo's targets are 72px against the caregiver's 48px. */
+[data-view="popo"] {
+  --control-height-sm: 56px;
+  --control-height-md: 72px;
+  --control-height-lg: 88px;
+  --icon-size: 28px;
+  --icon-size-lg: 40px;
+  --row-min-height: 84px;
+}
+
 [data-view="popo"] * {
   font-family: var(--font-zh-sans), var(--font-body), system-ui, sans-serif;
 }
@@ -80,6 +170,39 @@ button {
 }
 
 :focus-visible {
-  outline: 3px solid var(--sage-deep);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: var(--ring-focus);
+  border-radius: var(--radius-sm);
+}
+
+/* Call-surface animation. Defined here rather than inline so the [data-motion]
+   and prefers-reduced-motion rules above can switch them off. */
+@keyframes ct-ring {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+@keyframes ct-dot {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes ct-bar {
+  0%,
+  100% {
+    transform: scaleY(0.4);
+  }
+  50% {
+    transform: scaleY(1);
+  }
 }

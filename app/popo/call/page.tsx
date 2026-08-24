@@ -1,93 +1,69 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Phone, Home } from "lucide-react";
+import { Phone } from "lucide-react";
 import { useRelayStream } from "@/lib/relay/useRelayStream";
 import { VideoCallRoom } from "@/components/videoCall/VideoCallRoom";
+import { CallScreen, HomeButton } from "@/components/popo/CallScreen";
 import { zhHK } from "@/lib/i18n/zh-HK";
 
 type Stage = "idle" | "ringing" | "in-call" | "ended";
 
 export default function PopoVideoCallPage() {
-  const router = useRouter();
   const { callInvite } = useRelayStream();
   const [stage, setStage] = useState<Stage>("idle");
   const [answeredFor, setAnsweredFor] = useState<string | null>(null);
 
-  const effectiveStage: Stage =
-    stage === "idle" && callInvite ? "ringing" : stage;
+  const effectiveStage: Stage = stage === "idle" && callInvite ? "ringing" : stage;
 
   if (effectiveStage === "in-call" && answeredFor) {
     return (
-      <VideoCallRoom
-        side="popo"
-        familyMemberId={answeredFor}
-        onEnded={() => setStage("ended")}
-      />
+      <VideoCallRoom side="popo" familyMemberId={answeredFor} onEnded={() => setStage("ended")} />
     );
   }
 
   if (effectiveStage === "ringing" && callInvite) {
     return (
-      <Screen>
-        <p className="font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] font-bold text-[var(--ink)]">
+      <CallScreen tone="calling">
+        <p className="font-[family-name:var(--font-zh-sans)] text-[calc(30px*var(--scale))] font-bold text-[var(--text-on-primary)]">
           {zhHK.incomingCallTitle}
         </p>
+        {/* One button. There is deliberately no decline: refusing a grandchild isn't
+            something she needs UI for, and two targets here is the likeliest mistap. */}
         <button
           onClick={() => {
             setAnsweredFor(callInvite);
             setStage("in-call");
           }}
-          className="flex min-h-[max(72px,calc(44px*var(--scale)))] w-[calc(200px*var(--scale))] flex-col items-center justify-center gap-2 rounded-full bg-[var(--sage)] text-white"
-          style={{ height: "calc(200px * var(--scale))" }}
+          className="flex aspect-square w-[calc(140px*var(--scale))] flex-col items-center justify-center gap-1 rounded-full bg-white text-[var(--text-action)] animate-[ct-ring_1.6s_var(--ease-out)_infinite]"
+          style={{ minWidth: 118 }}
         >
-          <Phone size={64} />
-          <span className="font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] font-medium">
+          <Phone size={42} />
+          <span className="font-[family-name:var(--font-zh-sans)] text-[calc(21px*var(--scale))] font-medium">
             {zhHK.answer}
           </span>
         </button>
-      </Screen>
+      </CallScreen>
     );
   }
 
   if (effectiveStage === "ended") {
     return (
-      <Screen>
-        <p className="font-[family-name:var(--font-zh-sans)] text-[calc(28px*var(--scale))] font-medium text-[var(--ink)]">
+      <CallScreen>
+        <p className="font-[family-name:var(--font-zh-sans)] text-[calc(25px*var(--scale))] font-medium text-[var(--text-body)]">
           {zhHK.callEnded}
         </p>
-        <HomeButton router={router} />
-      </Screen>
+        <HomeButton />
+      </CallScreen>
     );
   }
 
   return (
-    <Screen>
-      <p className="font-[family-name:var(--font-zh-sans)] text-[calc(24px*var(--scale))] text-[var(--ink-soft)]">
+    <CallScreen>
+      <p className="font-[family-name:var(--font-zh-sans)] text-[calc(23px*var(--scale))] text-[var(--text-muted)]">
         {zhHK.noActiveCall}
       </p>
-      <HomeButton router={router} />
-    </Screen>
-  );
-}
-
-function Screen({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex min-h-dvh flex-col items-center justify-center gap-[calc(32px*var(--scale))] bg-[var(--cream)] px-8 text-center">
-      {children}
-    </div>
-  );
-}
-
-function HomeButton({ router }: { router: ReturnType<typeof useRouter> }) {
-  return (
-    <button
-      onClick={() => router.push("/popo")}
-      className="flex min-h-[max(72px,calc(44px*var(--scale)))] items-center gap-2 rounded-[16px] border-2 border-[var(--sage)] bg-[var(--paper)] px-6 font-[family-name:var(--font-zh-sans)] text-[calc(24px*var(--scale))] text-[var(--sage-deep)]"
-    >
-      <Home size={32} />
-      {zhHK.backHome}
-    </button>
+      <HomeButton />
+    </CallScreen>
   );
 }

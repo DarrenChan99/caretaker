@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { MonitorPlay } from "lucide-react";
+import { Logo } from "@/components/Logo";
 
 // For the real demo, open /popo and /family in two tiled windows directly — no nav
 // crosses between the two views inside the app (§1). This page is the shareable
@@ -8,9 +9,7 @@ import { MonitorPlay } from "lucide-react";
 export default function RootPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-8 bg-[var(--cream)] px-6">
-      <p className="font-[family-name:var(--font-display)] text-[28px] font-semibold text-[var(--ink)]">
-        Caretaker
-      </p>
+      <Logo size={56} />
 
       <Link
         href="/demo"

@@ -17,12 +17,14 @@ export default function FamilyVideoCallPage({
 
   if (ended) {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-[var(--cream)] px-8 text-center">
-        <PhoneOff size={40} className="text-[var(--sage-deep)]" />
-        <p className="text-[20px] font-medium text-[var(--ink)]">{zhHK.callEnded}</p>
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-[var(--space-4)] bg-[var(--canvas)] px-8 text-center">
+        <PhoneOff size={28} className="text-[var(--text-action)]" />
+        <p className="font-[family-name:var(--font-display)] text-[18px] font-semibold text-[var(--text-body)]">
+          {zhHK.callEnded}
+        </p>
         <button
           onClick={() => router.back()}
-          className="rounded-[8px] bg-[var(--sage)] px-4 py-2 text-[13px] text-white"
+          className="h-[var(--control-height-sm)] rounded-[var(--radius-sm)] border border-[var(--border-hairline)] bg-[var(--surface-card)] px-4 text-[14px] text-[var(--text-body)]"
         >
           Back
         </button>

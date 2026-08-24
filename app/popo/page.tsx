@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Users, Newspaper, MessageCircle, Phone, Heart, Gamepad2 } from "lucide-react";
+import { Users, Newspaper, MessageCircle, Heart, Gamepad2 } from "lucide-react";
 import { db } from "@/lib/db/client";
 
 export const dynamic = "force-dynamic";
@@ -30,13 +30,15 @@ export default async function PopoHome() {
         </p>
       </div>
 
-      <div className="flex flex-col gap-[calc(24px*var(--scale))]">
+      {/* Bottom padding clears the floating call button, which overlaps this stack. */}
+      <div className="flex flex-col gap-[calc(24px*var(--scale))] pb-[max(128px,calc(104px*var(--scale)))]">
         <DestinationButton href="/popo/people" icon={Users} label={zhHK.homeFamily} />
         <DestinationButton href="/popo/news" icon={Newspaper} label={zhHK.homeNews} />
-        {/* Three ways to talk, three different icons — the phone is only ever a live
-            call to a person, so an incoming ring is never confused with a message. */}
+        {/* Calling a real person lives in CallFab, floating, not in this stack — it's
+            the one action here that isn't browsing. Messages and Ah Mui keep separate
+            icons so a message is never confused with a live call, and a heart never
+            reads as a person. */}
         <DestinationButton href="/popo/chat" icon={MessageCircle} label={zhHK.homeChat} />
-        <DestinationButton href="/popo/call" icon={Phone} label={zhHK.homeCall} />
         <DestinationButton href="/popo/companion" icon={Heart} label={zhHK.homeCompanion} />
         <DestinationButton href="/popo/games" icon={Gamepad2} label={zhHK.homeGames} />
       </div>
