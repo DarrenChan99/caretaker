@@ -34,7 +34,7 @@ export function PopoNotificationCard() {
 
   return (
     <Link
-      href="/popo/relay"
+      href="/popo/chat"
       className="mb-[calc(24px*var(--scale))] flex items-center gap-[calc(16px*var(--scale))] rounded-[16px] border-2 border-[var(--amber)] bg-[var(--paper)] p-[calc(24px*var(--scale))]"
     >
       <MessageCircle size={48} className="shrink-0 text-[var(--amber)]" />

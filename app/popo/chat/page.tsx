@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Phone, Home, Volume2 } from "lucide-react";
-import { canSpeak, startRecognition } from "@/lib/audio/session";
+import { Home, Volume2 } from "lucide-react";
+import { startRecognition } from "@/lib/audio/session";
 import { useRelayStream } from "@/lib/relay/useRelayStream";
 import { playTts } from "@/lib/relay/playTts";
 import { zhHK } from "@/lib/i18n/zh-HK";
@@ -11,14 +11,15 @@ import type { RelayMessage } from "@/lib/relay/useRelayStream";
 
 type Stage = "loading" | "ringing" | "playing" | "reply-prompt" | "listening";
 
-export default function PopoRelayPage() {
+export default function PopoChatPage() {
   const router = useRouter();
-  const { whoseTurn, revision } = useRelayStream();
+  const { revision } = useRelayStream();
   const [stage, setStage] = useState<Stage>("loading");
   const [message, setMessage] = useState<RelayMessage | null>(null);
   const [typed, setTyped] = useState("");
   const [interim, setInterim] = useState("");
   const [justSent, setJustSent] = useState(false);
+  const [micError, setMicError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/relay/latest")
@@ -68,20 +69,20 @@ export default function PopoRelayPage() {
   }
 
   function startReply() {
-    setStage("listening");
     setInterim("");
-    if (!canSpeak("popo", whoseTurn)) {
-      // Turn already moved on (e.g. reconnect race) — typed fallback still works.
-      return;
-    }
-    startRecognition({
+    setMicError(null);
+    // The stage only advances once a recognizer is actually running. Flipping it first
+    // stranded the screen on a dead "Listening…" with no way back but the typed box,
+    // any time recognition could not start (no Web Speech API, denied mic, live call).
+    const handle = startRecognition({
       lang: "zh-HK",
       onInterim: setInterim,
       onFinal: (text) => sendReply(text),
-      onError: () => {
-        // calm, silent fallback to the typed input already on screen
-      },
+      onError: setMicError,
+      onEnd: () => setStage((s) => (s === "listening" ? "reply-prompt" : s)),
     });
+    if (!handle) return;
+    setStage("listening");
   }
 
   async function sendReply(textZh: string) {
@@ -104,16 +105,18 @@ export default function PopoRelayPage() {
     return (
       <Screen>
         <p className="font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] font-bold text-[var(--ink)]">
-          {zhHK.incomingCallTitle}
+          {zhHK.newMessageTitle}
         </p>
+        {/* A speaker, never a phone: this plays a recorded message. The phone icon is
+            reserved for a live call so the two never read as the same action. */}
         <button
           onClick={answer}
           className="flex min-h-[max(72px,calc(44px*var(--scale)))] w-[calc(200px*var(--scale))] flex-col items-center justify-center gap-2 rounded-full bg-[var(--sage)] text-white"
           style={{ height: "calc(200px * var(--scale))" }}
         >
-          <Phone size={64} />
+          <Volume2 size={64} />
           <span className="font-[family-name:var(--font-zh-sans)] text-[calc(32px*var(--scale))] font-medium">
-            {zhHK.answer}
+            {zhHK.listenToMessage}
           </span>
         </button>
       </Screen>
@@ -166,6 +169,12 @@ export default function PopoRelayPage() {
         ) : (
           <p className="font-[family-name:var(--font-zh-sans)] text-[calc(24px*var(--scale))] text-[var(--sage-deep)]">
             {zhHK.listening}
+          </p>
+        )}
+
+        {micError && (
+          <p className="max-w-[18ch] font-[family-name:var(--font-zh-sans)] text-[calc(22px*var(--scale))] leading-[1.7] text-[var(--ink-soft)]">
+            {zhHK.micUnavailable}
           </p>
         )}
 

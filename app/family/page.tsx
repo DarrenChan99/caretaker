@@ -98,7 +98,7 @@ export default async function FamilyToday() {
 
       <div className="flex w-full flex-col gap-3 lg:w-[240px]">
         <Link
-          href="/family/relay"
+          href="/family/chat"
           className="flex min-h-[56px] items-center justify-center gap-2 rounded-[8px] bg-[var(--sage)] text-[15px] font-medium text-white"
         >
           <Radio size={18} /> Speak to Popo

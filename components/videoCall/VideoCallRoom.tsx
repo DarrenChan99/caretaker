@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Room, Track } from "livekit-client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Room, RoomEvent, Track } from "livekit-client";
 import { LiveKitRoom, VideoConference } from "@livekit/components-react";
+import { Languages } from "lucide-react";
 import { useVapiInterpreter } from "@/lib/vapi/interpreter";
-import { setLiveKitRoomActive } from "@/lib/audio/session";
+import { setVoiceCallActive } from "@/lib/audio/session";
+import { zhHK } from "@/lib/i18n/zh-HK";
 
 export interface TranscriptEntry {
   speaker: "family" | "popo";
@@ -12,6 +14,8 @@ export interface TranscriptEntry {
   kind: "source" | "translation";
   text: string;
   at: number;
+  /** Whether live interpretation was switched on when this was said. */
+  translating: boolean;
 }
 
 /**
@@ -33,7 +37,9 @@ export function VideoCallRoom({
   const [creds, setCreds] = useState<{ url: string; token: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [room] = useState(() => new Room());
+  const [translating, setTranslating] = useState(false);
   const transcriptRef = useRef<TranscriptEntry[]>([]);
+  const translatingRef = useRef(false);
   const interpreter = useVapiInterpreter();
   const sourceLang = side === "family" ? "en" : "zh";
   const targetLang = side === "family" ? "zh" : "en";
@@ -65,29 +71,77 @@ export function VideoCallRoom({
     };
   }, [familyMemberId, side]);
 
+  // onDisconnected is not guaranteed to run — navigating away mid-call unmounts us
+  // first, and the flag is module state, so a missed clear kills speech recognition
+  // for the rest of the tab's life.
+  useEffect(() => () => setVoiceCallActive(false), []);
+
   useEffect(() => {
     if (!interpreter.translatedTrack) return;
     void room.localParticipant.publishTrack(interpreter.translatedTrack, { name: "interpreter-audio" });
   }, [interpreter.translatedTrack, room]);
 
+  /**
+   * Turning translation on has to happen on BOTH sides at once: each side's interpreter
+   * only ever hears its own mic, so one person asking has to switch on the other
+   * direction too. `mirror` is false when the request arrived from the peer, which is
+   * what stops the two clients bouncing it back and forth forever.
+   */
+  const applyTranslating = useCallback(
+    (on: boolean, mirror: boolean) => {
+      translatingRef.current = on;
+      setTranslating(on);
+      interpreter.setTranslating(on);
+      if (!mirror) return;
+      void room.localParticipant
+        .publishData(new TextEncoder().encode(JSON.stringify({ t: "translate", on })), {
+          reliable: true,
+        })
+        .catch(() => {});
+    },
+    [interpreter, room],
+  );
+
+  useEffect(() => {
+    const onData = (payload: Uint8Array) => {
+      try {
+        const msg = JSON.parse(new TextDecoder().decode(payload)) as { t?: string; on?: boolean };
+        if (msg.t === "translate" && typeof msg.on === "boolean") applyTranslating(msg.on, false);
+      } catch {
+        // Not ours — other features may share the data channel.
+      }
+    };
+    room.on(RoomEvent.DataReceived, onData);
+    return () => {
+      room.off(RoomEvent.DataReceived, onData);
+    };
+  }, [room, applyTranslating]);
+
   async function handleConnected() {
-    setLiveKitRoomActive(true);
+    setVoiceCallActive(true);
     const micTrack = room.localParticipant.getTrackPublication(Track.Source.Microphone)?.track
       ?.mediaStreamTrack;
     if (!micTrack) return;
-    interpreter.start(micTrack.clone(), sourceLang, targetLang, (text, kind) => {
-      transcriptRef.current.push({
-        speaker: side,
-        lang: kind === "source" ? sourceLang : targetLang,
-        kind,
-        text,
-        at: Date.now(),
-      });
-    });
+    interpreter.start(
+      micTrack.clone(),
+      sourceLang,
+      targetLang,
+      (text, kind) => {
+        transcriptRef.current.push({
+          speaker: side,
+          lang: kind === "source" ? sourceLang : targetLang,
+          kind,
+          text,
+          at: Date.now(),
+          translating: translatingRef.current,
+        });
+      },
+      (wantsTranslation) => applyTranslating(wantsTranslation, true),
+    );
   }
 
   async function handleDisconnected() {
-    setLiveKitRoomActive(false);
+    setVoiceCallActive(false);
     interpreter.stop();
     await fetch("/api/video-call/end", {
       method: "POST",
@@ -114,7 +168,7 @@ export function VideoCallRoom({
   if (!creds) return <p className="p-8 text-center text-[15px] text-[var(--ink-soft)]">Connecting…</p>;
 
   return (
-    <div className="h-dvh w-full">
+    <div className="relative h-dvh w-full">
       <LiveKitRoom
         room={room}
         serverUrl={creds.url}
@@ -128,7 +182,33 @@ export function VideoCallRoom({
         style={{ height: "100%" }}
       >
         <VideoConference />
+        <TranslateToggle on={translating} onToggle={() => applyTranslating(!translating, true)} />
       </LiveKitRoom>
     </div>
+  );
+}
+
+/**
+ * The discoverable half of the feature. "Hey Vapi, translate" is invisible and Popo
+ * will not remember it, so the same switch has to be on screen — and it doubles as the
+ * way out when the model mishears and turns translation on by itself.
+ *
+ * Sits above the LiveKit control bar rather than inside it; <VideoConference/> owns its
+ * own toolbar and there is no supported slot to add a button to it.
+ */
+function TranslateToggle({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+  return (
+    <button
+      onClick={onToggle}
+      aria-pressed={on}
+      className="absolute bottom-[92px] left-1/2 z-50 flex min-h-[56px] -translate-x-1/2 items-center gap-3 rounded-full px-6 text-[17px] font-medium shadow-lg"
+      style={{
+        background: on ? "var(--sage)" : "rgba(0,0,0,0.65)",
+        color: "#fff",
+      }}
+    >
+      <Languages size={24} />
+      {on ? zhHK.translateOn : zhHK.translateOff}
+    </button>
   );
 }

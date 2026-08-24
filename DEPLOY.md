@@ -52,6 +52,6 @@ npx vercel env add AZURE_SPEECH_KEY production
 npx vercel env add AZURE_SPEECH_REGION production
 npx vercel env add APIFY_TOKEN production
 npx vercel env add NEXT_PUBLIC_VAPI_PUBLIC_KEY production
-npx vercel env add VAPI_ASSISTANT_ID production
+npx vercel env add NEXT_PUBLIC_VAPI_ASSISTANT_ID production
 npx vercel deploy --prod    # or just `git push` if step 2's connect is done
 ```

@@ -18,7 +18,9 @@ export const zhHK = {
   greeting: (name: string) => `Hi, ${name}`,
   homeFamily: "Family",
   homeNews: "Today's News",
-  homeChat: "Chat",
+  homeChat: "Messages",
+  homeCall: "Call Family",
+  homeCompanion: "Talk to Ah Mui",
   someoneIsCalling: "Someone is calling you",
 
   // /popo/people
@@ -52,13 +54,24 @@ export const zhHK = {
 
   // relay: popo-side call screen
   incomingCallTitle: "Someone is calling you",
+  newMessageTitle: "You have a new message",
+  listenToMessage: "Listen",
   answer: "Answer",
   iWantToSpeak: "I want to speak",
   listening: "Listening...",
+  micUnavailable: "The microphone isn't working here. Please type your reply below.",
   connecting: "Connecting...",
   connectionLostCalm: "Can't connect right now, please wait",
   callEnded: "Call ended",
+  companionConnecting: "Calling Ah Mui...",
+  companionLive: "Ah Mui is listening",
+  companionAgain: "Talk to Ah Mui again",
+  companionUnavailable: "Ah Mui can't come to the phone right now.",
   noActiveCall: "No call right now",
+  // Both sides of the video call see this one button, so it stays bilingual whatever
+  // the demo override above does to the rest of the file.
+  translateOff: "Translate · 翻譯",
+  translateOn: "Translating · 翻譯緊",
 
   // /family strings that surface Chinese
   medNotConfirmed: "Medication not confirmed",

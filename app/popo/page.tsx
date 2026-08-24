@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Users, Newspaper, Phone, Gamepad2 } from "lucide-react";
+import { Users, Newspaper, MessageCircle, Phone, Heart, Gamepad2 } from "lucide-react";
 import { db } from "@/lib/db/client";
 
 export const dynamic = "force-dynamic";
@@ -33,7 +33,11 @@ export default async function PopoHome() {
       <div className="flex flex-col gap-[calc(24px*var(--scale))]">
         <DestinationButton href="/popo/people" icon={Users} label={zhHK.homeFamily} />
         <DestinationButton href="/popo/news" icon={Newspaper} label={zhHK.homeNews} />
-        <DestinationButton href="/popo/relay" icon={Phone} label={zhHK.homeChat} />
+        {/* Three ways to talk, three different icons — the phone is only ever a live
+            call to a person, so an incoming ring is never confused with a message. */}
+        <DestinationButton href="/popo/chat" icon={MessageCircle} label={zhHK.homeChat} />
+        <DestinationButton href="/popo/call" icon={Phone} label={zhHK.homeCall} />
+        <DestinationButton href="/popo/companion" icon={Heart} label={zhHK.homeCompanion} />
         <DestinationButton href="/popo/games" icon={Gamepad2} label={zhHK.homeGames} />
       </div>
     </div>

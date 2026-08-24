@@ -19,11 +19,11 @@ export function PopoIncomingCall() {
   const pathname = usePathname();
 
   // The video-call page renders its own full-screen ring/answer UI.
-  if (!callInvite || pathname === "/popo/video-call") return null;
+  if (!callInvite || pathname === "/popo/call") return null;
 
   return (
     <Link
-      href="/popo/video-call"
+      href="/popo/call"
       className="fixed inset-x-0 top-0 z-50 mx-auto flex max-w-[640px] items-center gap-[calc(16px*var(--scale))] border-b-2 border-[var(--sage)] bg-[var(--sage)] p-[calc(20px*var(--scale))] text-white shadow-lg"
     >
       <Phone size={44} className="shrink-0 animate-pulse" />

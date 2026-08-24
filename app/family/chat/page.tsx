@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
-import { Mic, Video } from "lucide-react";
-import { canSpeak, startRecognition } from "@/lib/audio/session";
+import { Mic } from "lucide-react";
+import { startRecognition } from "@/lib/audio/session";
 import { useRelayStream, type RelayMessage } from "@/lib/relay/useRelayStream";
 import { useRelayMode } from "@/lib/relay/useRelayMode";
+import { isFromPopo } from "@/lib/relay/senders";
 import { useSettings } from "@/lib/settings/useSettings";
 
-export default function FamilyRelayPage() {
-  const { whoseTurn, status, revision } = useRelayStream();
+export default function FamilyChatPage() {
+  const { status, revision } = useRelayStream();
   const { mode, setMode } = useRelayMode();
   const { settings } = useSettings("family");
   const [messages, setMessages] = useState<RelayMessage[]>([]);
@@ -17,7 +17,7 @@ export default function FamilyRelayPage() {
   const [interim, setInterim] = useState("");
   const [sending, setSending] = useState(false);
   const [typed, setTyped] = useState("");
-  const [callHref, setCallHref] = useState<string | null>(null);
+  const [micError, setMicError] = useState<string | null>(null);
   const stopRef = useRef<{ stop: () => void } | null>(null);
   const transcriptRef = useRef("");
   const wantListenRef = useRef(false);
@@ -68,8 +68,12 @@ export default function FamilyRelayPage() {
         setInterim(transcriptRef.current);
       },
       onError: (message) => {
-        // A silence gap is normal here — anything else means the mic is gone.
-        if (message !== "no-speech" && message !== "aborted") wantListenRef.current = false;
+        // A silence gap is normal here — anything else means the mic is gone, and the
+        // reason has to reach the screen or the button just looks dead (Firefox has no
+        // Web Speech API at all).
+        if (message === "no-speech" || message === "aborted") return;
+        wantListenRef.current = false;
+        setMicError(message);
       },
       onEnd: () => {
         if (!wantListenRef.current) return;
@@ -102,7 +106,7 @@ export default function FamilyRelayPage() {
       stopListening();
       return;
     }
-    if (!canSpeak("family", whoseTurn)) return;
+    setMicError(null);
     transcriptRef.current = "";
     wantListenRef.current = true;
     setListening(true);
@@ -110,16 +114,7 @@ export default function FamilyRelayPage() {
     beginRecognition();
   }
 
-  useEffect(() => {
-    fetch("/api/family/me")
-      .then((r) => r.json())
-      .then((row: { id: string } | null) => {
-        if (row?.id) setCallHref(`/family/video-call/${row.id}`);
-      })
-      .catch(() => {});
-  }, []);
-
-  const disabled = !canSpeak("family", whoseTurn) || sending;
+  const disabled = sending;
 
   return (
     <div className="relative flex flex-col gap-6 pb-8">
@@ -166,10 +161,11 @@ export default function FamilyRelayPage() {
         <p className="max-w-[280px] text-center text-[15px] text-[var(--ink)]">
           {listening
             ? interim || "Listening… tap again to send."
-            : disabled && !sending
-              ? "Waiting for Popo's reply…"
-              : "Tap to speak, tap again to send. Popo hears you in Cantonese."}
+            : "Tap to speak, tap again to send. Popo hears you in Cantonese."}
         </p>
+        {micError && (
+          <p className="max-w-[280px] text-center text-[13px] text-[#8a3a3a]">{micError}</p>
+        )}
       </div>
 
       <form
@@ -202,13 +198,13 @@ export default function FamilyRelayPage() {
           </p>
         )}
         {messages.map((m) => {
-          const fromKen = m.senderNameEn === "Ken";
+          const fromFamily = !isFromPopo(m.senderNameEn);
           return (
             <div
               key={m.id}
-              className={`flex flex-col gap-1 rounded-[8px] px-3 py-2 ${fromKen ? "ml-8 self-end bg-[var(--sage)]/8" : "mr-8 self-start bg-[var(--sage)]/8"}`}
+              className={`flex flex-col gap-1 rounded-[8px] px-3 py-2 ${fromFamily ? "ml-8 self-end bg-[var(--sage)]/8" : "mr-8 self-start bg-[var(--sage)]/8"}`}
             >
-              {fromKen ? (
+              {fromFamily ? (
                 <>
                   <p className="text-[15px] text-[var(--ink)]">{m.textEn}</p>
                   {settings.showCaptions && (
@@ -230,16 +226,6 @@ export default function FamilyRelayPage() {
           );
         })}
       </div>
-
-      {callHref && (
-        <Link
-          href={callHref}
-          className="flex min-h-[44px] items-center justify-center gap-2 rounded-[8px] bg-[var(--sage)] px-4 text-[15px] font-medium text-white"
-        >
-          <Video size={18} />
-          Call Popo
-        </Link>
-      )}
     </div>
   );
 }

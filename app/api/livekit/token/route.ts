@@ -41,7 +41,7 @@ export async function POST(req: Request) {
   at.addGrant({ room: roomName(), roomJoin: true, canPublish: true, canSubscribe: true });
 
   // The family side placing the call is what starts the ring; the popo side
-  // answering clears it (see app/popo/video-call/page.tsx).
+  // answering clears it (see app/popo/call/page.tsx).
   if (side === "family") {
     await setCallInvite(familyMemberId);
   } else {

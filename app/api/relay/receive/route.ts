@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { relayMessages } from "@/lib/db/schema";
 import { translate } from "@/lib/llm/translate";
 import { setTurn } from "@/lib/events/bus";
+import { POPO_SENDER } from "@/lib/relay/senders";
 
 const ELDER_ID = "popo";
 
@@ -15,7 +16,7 @@ export async function POST(req: Request) {
 
   const [row] = await db
     .insert(relayMessages)
-    .values({ elderId: ELDER_ID, senderNameEn: "Popo", textEn, textZh })
+    .values({ elderId: ELDER_ID, senderNameEn: POPO_SENDER, textEn, textZh })
     .returning();
 
   await setTurn("family");

@@ -4,6 +4,7 @@ import { relayMessages } from "@/lib/db/schema";
 import { translate } from "@/lib/llm/translate";
 import type { DeliveryMode } from "@/lib/relay/deliver";
 import { setTurn } from "@/lib/events/bus";
+import { getFamilyMe } from "@/lib/family/me";
 
 const ELDER_ID = "popo";
 
@@ -15,9 +16,13 @@ export async function POST(req: Request) {
 
   const textZh = await translate(textEn, "en-zh");
 
+  // Stamp the actual sender rather than a hardcoded "Ken", so a second family member's
+  // messages are attributed to them and still reach Popo.
+  const me = await getFamilyMe();
+
   const [row] = await db
     .insert(relayMessages)
-    .values({ elderId: ELDER_ID, senderNameEn: "Ken", textEn, textZh, mode })
+    .values({ elderId: ELDER_ID, senderNameEn: me?.nameEn ?? "Family", textEn, textZh, mode })
     .returning();
 
   await setTurn("popo");

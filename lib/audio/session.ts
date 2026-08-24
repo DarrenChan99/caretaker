@@ -5,11 +5,12 @@
  * Nothing else should call these browser APIs directly — that's what keeps only one
  * mic ever live and playback ever unblocked (§1.5).
  *
- * One sanctioned exception: LiveKit's <LiveKitRoom> acquires its own getUserMedia
- * for the family<->popo video call. That's fine because video-call and
- * relay/companion flows are mutually exclusive routes in this app — never mounted
- * in the same tab at once — but startRecognition() below still refuses to start
- * while a LiveKit room is live, so the invariant is enforced in code, not just here.
+ * Two sanctioned exceptions, both live voice calls that acquire their own mic:
+ * LiveKit's <LiveKitRoom> for the family<->popo video call, and the Vapi companion
+ * call on /popo/companion. That's fine because those and the chat/relay flows are
+ * mutually exclusive routes — never mounted in the same tab at once — but
+ * startRecognition() below still refuses to start while either is live
+ * (setVoiceCallActive), so the invariant is enforced in code, not just here.
  */
 
 let audioCtx: AudioContext | null = null;
@@ -40,15 +41,12 @@ export function releaseMicStream() {
 
 export type Turn = "family" | "popo" | "idle";
 
-/**
- * Both sides may always speak. This was `whoseTurn === side` (walkie-talkie
- * turn-taking), but the baton is a single DB row that strands on whichever side
- * spoke last — a stuck value disables one side forever, and "idle" disables both.
- * ponytail: restore the `whoseTurn === side` check to go back to turn-taking.
- */
-export function canSpeak(_side: Exclude<Turn, "idle">, _whoseTurn: Turn): boolean {
-  return true;
-}
+// Both sides may always speak. This was gated on `whoseTurn === side` (walkie-talkie
+// turn-taking), but the baton is a single DB row that strands on whichever side spoke
+// last — a stuck value disabled one side forever, and "idle" disabled both. The gate
+// had already been reduced to `return true`; the last callers were removed with it.
+// ponytail: reintroduce a `whoseTurn === side` check at the two mic buttons to go back
+// to turn-taking.
 
 type SpeechRecognitionCtor = new () => SpeechRecognition;
 
@@ -61,11 +59,16 @@ function getRecognitionCtor(): SpeechRecognitionCtor | null {
 }
 
 let activeRecognition: SpeechRecognition | null = null;
-let liveKitRoomActive = false;
+let voiceCallActive = false;
 
-/** Called by the video-call page on room join/leave — see the module comment above. */
-export function setLiveKitRoomActive(active: boolean) {
-  liveKitRoomActive = active;
+/**
+ * Called by anything that holds the mic for a live voice call — the LiveKit video
+ * call and the Vapi companion call both do — so recognition stays mutually exclusive
+ * with them. Callers must clear it on unmount, not just on a clean hangup: a flag
+ * left set kills the mic for the rest of the tab's life.
+ */
+export function setVoiceCallActive(active: boolean) {
+  voiceCallActive = active;
 }
 
 /**
@@ -81,14 +84,19 @@ export function startRecognition(opts: {
   continuous?: boolean;
   onEnd?: () => void;
 }): { stop: () => void } | null {
-  if (liveKitRoomActive) {
-    opts.onError("A video call is active — speech recognition is unavailable until it ends.");
+  // Both failure paths fire onEnd as well as onError: callers unwind their "listening"
+  // UI in onEnd, and a start that never happened has to unwind the same way as one that
+  // ended, or the screen strands on a listening state with no recognizer behind it.
+  if (voiceCallActive) {
+    opts.onError("A call is active — speech recognition is unavailable until it ends.");
+    opts.onEnd?.();
     return null;
   }
 
   const Ctor = getRecognitionCtor();
   if (!Ctor) {
     opts.onError("Speech recognition unavailable in this browser — use the typed fallback.");
+    opts.onEnd?.();
     return null;
   }
 
@@ -123,7 +131,16 @@ export function startRecognition(opts: {
     opts.onEnd?.();
   };
 
+  // start() throws (InvalidStateError, or a denied mic on some builds) rather than
+  // reporting through onerror — same unwind as the guards above.
+  try {
+    recognition.start();
+  } catch {
+    opts.onError("Could not start the microphone — use the typed fallback.");
+    opts.onEnd?.();
+    return null;
+  }
+
   activeRecognition = recognition;
-  recognition.start();
   return { stop: () => recognition.stop() };
 }

@@ -9,19 +9,13 @@ import {
   fillPrompt,
   type CompanionVariables,
 } from "@/lib/vapi/systemPrompt";
+import { buildCompanionAssistant } from "@/lib/vapi/companionConfig";
 
 /**
  * Demo bench: ask for the per-elder details, substitute them into the companion prompt
  * live, then hand that exact filled text to Vapi. Nothing here is persisted — the whole
  * point is that a stranger at the table can retype the name and hear the difference.
  */
-
-/** One place to retune providers; Cantonese support is the only reason for each pick. */
-const CALL_CONFIG = {
-  model: { provider: "openai", model: "gpt-4o" },
-  voice: { provider: "azure", voiceId: "zh-HK-HiuMaanNeural" },
-  transcriber: { provider: "deepgram", model: "nova-2", language: "zh-HK" },
-} as const;
 
 interface Field {
   key: keyof CompanionVariables;
@@ -123,13 +117,9 @@ export function CompanionSetup({ defaults }: { defaults: Partial<CompanionVariab
         setTranscript((prev) => [...prev, { role: m.role ?? "user", text: m.transcript! }]);
       });
 
-      // The prompt is sent already filled rather than as variableValues, so what the
-      // model receives is exactly the text shown on the right of this screen.
-      await vapi.start({
-        ...CALL_CONFIG,
-        model: { ...CALL_CONFIG.model, messages: [{ role: "system", content: filledPrompt }] },
-        firstMessage: filledGreeting,
-      });
+      // Same assistant the real call on /popo/companion builds — the text shown on the
+      // right of this screen is exactly what the model receives.
+      await vapi.start(buildCompanionAssistant(vars));
     } catch (e) {
       setStatus("error");
       setNote(e instanceof Error ? e.message : "Could not start the call.");
